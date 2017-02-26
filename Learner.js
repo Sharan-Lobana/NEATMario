@@ -1,78 +1,82 @@
-//1
-function newGeneration(){
-	cullSpecies(false); // Cull the bottom half of each species
-	rankGlobally();
-	removeStaleSpecies();
-	rankGlobally();
-	for (var s in pool.species){
-		var species = pool.species[s];
-		calculateAverageFitness(species);
+var Config = require('./config');
+var Genome = require('./Genome');
+var Genes = require('./Gene');
+var Species = require('./Species');
+var Pool = require('./Pool');
+var DataStorage = require('./datastorage');
+var NeuralNet = require('./NeuralNet');
+
+var Robot = require('robotjs');
+
+var Utility{
+	controller: null
+}
+// 1
+Utility.newGeneration = function(){
+	Species.cullSpecies(false); // Cull the bottom half of each species
+	Pool.rankGlobally();
+	Species.removeStaleSpecies();
+	Pool.rankGlobally();
+	for (var s in Pool.species){
+		var species = Pool.species[s];
+		Species.calculateAverageFitness(species);
 	}
-	removeWeakSpecies();
-	var sum = totalAverageFitness();
+	Species.removeWeakSpecies();
+	var sum = Pool.totalAverageFitness();
 	var children = {};
-	for (var s in pool.species){
-		var species = pool.species[s];
-		var breed = Math.floor(species.averageFitness / sum * Population) - 1;
+	for (var s in Pool.species){
+		var species = Pool.species[s];
+		var breed = Math.floor(Species.averageFitness / sum * Config.Population) - 1;
 		for (var i = 1; i <= breed; i++) {
-			children.push(breedChild(species));
+			children.push(Species.breedChild(species));
 		}
 	}
-	cullSpecies(true) // Cull all but the top member of each species
-	while (children.length + pool.species.length < Population) {
-		var index = Math.floor((Math.random() * pool.species.length) + 1);
-		var species = pool.species[index];
-		children.push(breedChild(species));
+	Species.cullSpecies(true) // Cull all but the top member of each species
+	while (children.length + Pool.species.length < Config.Population) {
+		var index = Math.floor((Math.random() * Pool.species.length) + 1);
+		var species = Pool.species[index];
+		children.push(Species.breedChild(species));
 	}
 	for (var c in children) {
 		var child = children[c];
-		addToSpecies(child);
+		Pool.addToSpecies(child);
 	}
 	
-	pool.generation = pool.generation + 1;
+	Pool.generation += 1;
 	
-	writeFile("backup." .. pool.generation .. "." .. forms.gettext(saveLoadFile));
+	DataStorage.writeToFile("Backup" + "_" + Pool.generation + "_" + /*forms.gettext(saveLoadFile)*/ Config.filename);
 }
 // 2
-function initializePool(){
-	var pool = newPool();
-
-	for (var i = 1; i <= Population; i++) {
-		var basic = basicGenome();
-		addToSpecies(basic);
+Utility.clearJoypad = function(){
+	//Utility.controller = {};
+	for (var b in Config.ButtonNames) {
+		//controller["P1 " .. ButtonNames[b]] = false;
+		Robot.keyToggle(Config.ButtonNames[b], 'up');
 	}
-
-	initializeRun();
+	//joypad.set(controller);
 }
 // 3
-function clearJoypad(){
-	var controller = {};
-	for (var b in ButtonNames) {
-		controller["P1 " .. ButtonNames[b]] = false;
-	}
-	joypad.set(controller);
+Utility.initializeRun = function(){
+	savestate.load(Filename);
+	//var rightmost = 0;
+	Pool.currentFrame = 0;
+	var timeout = Config.TimeoutConstant;
+	Utility.clearJoypad();
+	
+	var species = Pool.species[Pool.currentSpecies];
+	var genome = species.genomes[Pool.currentGenome];
+	NeuralNet.generateNetwork(genome);
+	Utility.evaluateCurrent();
 }
 // 4
-function initializeRun(){
-	savestate.load(Filename);
-	var rightmost = 0;
-	pool.currentFrame = 0;
-	var timeout = TimeoutConstant;
-	clearJoypad();
-	
-	var species = pool.species[pool.currentSpecies];
-	var genome = species.genomes[pool.currentGenome];
-	generateNetwork(genome);
-	evaluateCurrent();
-}
-// 5
-function evaluateCurrent(){
-	local species = pool.species[pool.currentSpecies]
-	local genome = species.genomes[pool.currentGenome]
+Utility.evaluateCurrent = function(){
+	var species = Pool.species[Pool.currentSpecies];
+	var genome = species.genomes[Pool.currentGenome];
 
-	var inputs = getInputs();
-	var controller = evaluateNetwork(genome.network, inputs);
-	
+	var inputs = getInputs();  // Doubt
+	controller = NeuralNet.evaluateNetwork(genome.network, inputs);  // Doubt
+	Utility.controller = controller;
+
 	if (controller["P1 Left"] && controller["P1 Right"]) {
 		controller["P1 Left"] = false;
 		controller["P1 Right"] = false;
@@ -82,85 +86,110 @@ function evaluateCurrent(){
 		controller["P1 Down"] = false;
 	}
 
-	joypad.set(controller);
+	for (var b in Config.ButtonNames) {
+		if(controller["P1 " + Config.ButtonNames[b]] == true){
+			Robot.keyToggle(Config.ButtonNames[b], 'down');
+		}
+	}
+	//joypad.set(controller);
 }
 
-if (pool == null) {
-	initializePool();
+if (Pool == null) {
+	Pool.initializePool();
+	Utility.initializeRun();
 }
-// 6
-function nextGenome(){
-	pool.currentGenome = pool.currentGenome + 1;
-	if (pool.currentGenome > pool.species[pool.currentSpecies].genomes.length) {
-		pool.currentGenome = 1;
-		pool.currentSpecies = pool.currentSpecies+1;
-		if (pool.currentSpecies > pool.species.length) {
-			newGeneration();
-			pool.currentSpecies = 1;
+// 5
+Utility.nextGenome = function(){
+	Pool.currentGenome += 1;
+	if (Pool.currentGenome > Pool.species[Pool.currentSpecies].genomes.length) {
+		Pool.currentGenome = 1;
+		Pool.currentSpecies += 1;
+		if (Pool.currentSpecies > Pool.species.length) {
+			Utility.newGeneration();
+			Pool.currentSpecies = 1;
 		}
 	}
 }
-// 7
-function fitnessAlreadyMeasured(){
-	var species = pool.species[pool.currentSpecies];
-	var genome = species.genomes[pool.currentGenome];
+// 6
+Utility.fitnessAlreadyMeasured = function(){
+	var species = Pool.species[Pool.currentSpecies];
+	var genome = species.genomes[Pool.currentGenome];
 	
 	return genome.fitness != 0;
 }
-// 8
-writeFile("temp.pool");
+// 7
+DataStorage.writeToFile("temp.pool");  // Doubt
 
-event.onexit(onExit);
+//event.onexit(onExit);
+/*if (onGameEnd){
+	forms.destroy(form);
+}*/
+
+/*form = forms.newform(200, 260, "Fitness")
+maxFitnessLabel = forms.label(form, "Max Fitness: " .. math.floor(pool.maxFitness), 5, 8)
+showNetwork = forms.checkbox(form, "Show Map", 5, 30)
+showMutationRates = forms.checkbox(form, "Show M-Rates", 5, 52)
+restartButton = forms.button(form, "Restart", initializePool, 5, 77)
+saveButton = forms.button(form, "Save", savePool, 5, 102)
+loadButton = forms.button(form, "Load", loadPool, 80, 102)
+saveLoadFile = forms.textbox(form, Filename .. ".pool", 170, 25, nil, 5, 148)
+saveLoadLabel = forms.label(form, "Save/Load:", 5, 129)
+playTopButton = forms.button(form, "Play Top", playTop, 5, 170)
+hideBanner = forms.checkbox(form, "Hide Banner", 5, 190) */
 
 while (true) {
 
-	var species = pool.species[pool.currentSpecies];
-	var genome = species.genomes[pool.currentGenome];
+	var species = Pool.species[Pool.currentSpecies];
+	var genome = species.genomes[Pool.currentGenome];
 	
-	if (forms.ischecked(showNetwork)) {
+	/*if (forms.ischecked(showNetwork)) {
 		displayGenome(genome);
-	}
+	}*/
 	
-	if (pool.currentFrame % 5 == 0) {
-		evaluateCurrent();
+	if (Pool.currentFrame % 2 == 0) {
+		Utility.evaluateCurrent();
 	}
 
-	joypad.set(controller);
+	//joypad.set(controller);
+	for (var b in Config.ButtonNames) {
+		if(Utility.controller["P1 " + Config.ButtonNames[b]] == true){
+			Robot.keyToggle(Config.ButtonNames[b], 'down');
+		}
+	}
 
-	getPositions();
-	if (marioX > rightmost) {    // rightmost gives the last frame of the level
-		rightmost = marioX;
-		timeout = TimeoutConstant;
+	//getPositions();
+	var timeout;
+	if (Config.onLevelEnd) {    // rightmost gives the last frame of the level
+		timeout = Config.TimeoutConstant;
 	}
 	
 	timeout = timeout - 1;
 	
-	
-	var timeoutBonus = pool.currentFrame / 4;
+	var timeoutBonus = Pool.currentFrame / 4;
 	if (timeout + timeoutBonus <= 0) {
-		var fitness = rightmost - pool.currentFrame / 2;
-		if (rightmost > 4816) {                // 4816 should be replaced by width of the level
-			fitness = fitness + 1000;
+		var fitness = rightmost - pool.currentFrame / 2;  // Doubt
+		if (Config.onLevelEnd) {                
+			fitness += 1000;
 		}
 		if (fitness == 0) {
 			fitness = -1;
 		}
 		genome.fitness = fitness;
 		
-		if (fitness > pool.maxFitness) {
-			pool.maxFitness = fitness
+		if (fitness > Pool.maxFitness) {
+			Pool.maxFitness = fitness;
 			//forms.settext(maxFitnessLabel, "Max Fitness: " .. Math.floor(pool.maxFitness));
-			writeFile("backup." .. pool.generation .. "." .. forms.gettext(saveLoadFile));
+			DataStorage.writeToFile("Backup" + "_" + Pool.generation + "_" + /*forms.gettext(saveLoadFile)*/ Config.filename);
 		}
 		
-		console.writeline("Gen " .. pool.generation .. " species " .. pool.currentSpecies .. " genome " .. 
-			pool.currentGenome .. " fitness: " .. fitness);
-		pool.currentSpecies = 1;
-		pool.currentGenome = 1;
-		while (fitnessAlreadyMeasured()) {
-			nextGenome();
+		console.writeline("Generation: " + Pool.generation + " Species: " + Pool.currentSpecies + " Genome: " + 
+			Pool.currentGenome + " Fitness: " + fitness);
+		Pool.currentSpecies = 1;
+		Pool.currentGenome = 1;
+		while (Utility.fitnessAlreadyMeasured()) {
+			Utility.nextGenome();
 		}
-		initializeRun();
+		Utility.initializeRun();
 	}
 
 	var measured = 0;
@@ -173,8 +202,8 @@ while (true) {
 			}
 		}
 	}*/
-	for (var key in pool.species) {
-		var species = pool.species[key];
+	for (var key in Pool.species) {
+		var species = Pool.species[key];
 		for (var k in species.genomes) {
 			var genome = species.genomes[k];
 			total = total + 1;
@@ -191,7 +220,9 @@ while (true) {
 		gui.drawText(100, 12, "Max Fitness: " .. math.floor(pool.maxFitness), 0xFF000000, 11);
 	}*/
 		
-	pool.currentFrame = pool.currentFrame + 1;
+	Pool.currentFrame += 1;
 
 	//emu.frameadvance();
 }
+
+module.exports = Utility;
