@@ -118,6 +118,7 @@ Utility.fitnessAlreadyMeasured = function(){
 	return genome.fitness != 0;
 }
 // 7
+Utility.startUtility = function(){
 DataStorage.writeToFile("temp.pool");  // Doubt
 
 //event.onexit(onExit);
@@ -137,7 +138,7 @@ saveLoadLabel = forms.label(form, "Save/Load:", 5, 129)
 playTopButton = forms.button(form, "Play Top", playTop, 5, 170)
 hideBanner = forms.checkbox(form, "Hide Banner", 5, 190) */
 
-while (true) {
+//while (true) {
 
 	var species = Pool.species[Pool.currentSpecies];
 	var genome = species.genomes[Pool.currentGenome];
@@ -223,6 +224,7 @@ while (true) {
 	Pool.currentFrame += 1;
 
 	//emu.frameadvance();
+//}
 }
 
 module.exports = Utility;
