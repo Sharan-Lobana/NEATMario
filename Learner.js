@@ -73,8 +73,8 @@ Utility.evaluateCurrent = function(){
 	var species = Pool.species[Pool.currentSpecies];
 	var genome = species.genomes[Pool.currentGenome];
 
-	var inputs = getInputs();  // Doubt
-	controller = NeuralNet.evaluateNetwork(genome.network, inputs);  // Doubt
+	var inputs = getInputs();  // getInputs() must be modified, <Adapter>.getInputs() must be present where Adapter.js is the file responsible for getting inputs
+	controller = NeuralNet.evaluateNetwork(genome.network, inputs);  // inputs is only used here 
 	Utility.controller = controller;
 
 	if (controller["P1 Left"] && controller["P1 Right"]) {
@@ -119,112 +119,105 @@ Utility.fitnessAlreadyMeasured = function(){
 }
 // 7
 Utility.startUtility = function(){
-DataStorage.writeToFile("temp.pool");  // Doubt
+	DataStorage.writeToFile("temp.pool");  
 
-//event.onexit(onExit);
-/*if (onGameEnd){
-	forms.destroy(form);
-}*/
-
-/*form = forms.newform(200, 260, "Fitness")
-maxFitnessLabel = forms.label(form, "Max Fitness: " .. math.floor(pool.maxFitness), 5, 8)
-showNetwork = forms.checkbox(form, "Show Map", 5, 30)
-showMutationRates = forms.checkbox(form, "Show M-Rates", 5, 52)
-restartButton = forms.button(form, "Restart", initializePool, 5, 77)
-saveButton = forms.button(form, "Save", savePool, 5, 102)
-loadButton = forms.button(form, "Load", loadPool, 80, 102)
-saveLoadFile = forms.textbox(form, Filename .. ".pool", 170, 25, nil, 5, 148)
-saveLoadLabel = forms.label(form, "Save/Load:", 5, 129)
-playTopButton = forms.button(form, "Play Top", playTop, 5, 170)
-hideBanner = forms.checkbox(form, "Hide Banner", 5, 190) */
-
-//while (true) {
-
-	var species = Pool.species[Pool.currentSpecies];
-	var genome = species.genomes[Pool.currentGenome];
-	
-	/*if (forms.ischecked(showNetwork)) {
-		displayGenome(genome);
+	//event.onexit(onExit);
+	/*if (onGameEnd){
+		forms.destroy(form);
 	}*/
-	
-	if (Pool.currentFrame % 2 == 0) {
-		Utility.evaluateCurrent();
-	}
 
-	//joypad.set(controller);
-	for (var b in Config.ButtonNames) {
-		if(Utility.controller["P1 " + Config.ButtonNames[b]] == true){
-			Robot.keyToggle(Config.ButtonNames[b], 'down');
-		}
-	}
+	/*form = forms.newform(200, 260, "Fitness")
+	maxFitnessLabel = forms.label(form, "Max Fitness: " .. math.floor(pool.maxFitness), 5, 8)
+	showNetwork = forms.checkbox(form, "Show Map", 5, 30)
+	showMutationRates = forms.checkbox(form, "Show M-Rates", 5, 52)
+	restartButton = forms.button(form, "Restart", initializePool, 5, 77)
+	saveButton = forms.button(form, "Save", savePool, 5, 102)
+	loadButton = forms.button(form, "Load", loadPool, 80, 102)
+	saveLoadFile = forms.textbox(form, Filename .. ".pool", 170, 25, nil, 5, 148)
+	saveLoadLabel = forms.label(form, "Save/Load:", 5, 129)
+	playTopButton = forms.button(form, "Play Top", playTop, 5, 170)
+	hideBanner = forms.checkbox(form, "Hide Banner", 5, 190) */
 
-	//getPositions();
-	var timeout;
-	if (Config.onLevelEnd) {    // rightmost gives the last frame of the level
-		timeout = Config.TimeoutConstant;
-	}
-	
-	timeout = timeout - 1;
-	
-	var timeoutBonus = Pool.currentFrame / 4;
-	if (timeout + timeoutBonus <= 0) {
-		var fitness = rightmost - pool.currentFrame / 2;  // Doubt
-		if (Config.onLevelEnd) {                
-			fitness += 1000;
-		}
-		if (fitness == 0) {
-			fitness = -1;
-		}
-		genome.fitness = fitness;
-		
-		if (fitness > Pool.maxFitness) {
-			Pool.maxFitness = fitness;
-			//forms.settext(maxFitnessLabel, "Max Fitness: " .. Math.floor(pool.maxFitness));
-			DataStorage.writeToFile("Backup" + "_" + Pool.generation + "_" + /*forms.gettext(saveLoadFile)*/ Config.filename);
-		}
-		
-		console.writeline("Generation: " + Pool.generation + " Species: " + Pool.currentSpecies + " Genome: " + 
-			Pool.currentGenome + " Fitness: " + fitness);
-		Pool.currentSpecies = 1;
-		Pool.currentGenome = 1;
-		while (Utility.fitnessAlreadyMeasured()) {
-			Utility.nextGenome();
-		}
-		Utility.initializeRun();
-	}
+	while (!gameStateOver) {
 
-	var measured = 0;
-	var total = 0;
-	/*for (_,species in pairs(pool.species)) {
-		for (_,genome in pairs(species.genomes)) {
-			total = total + 1;
-			if (genome.fitness != 0) {
-				measured = measured + 1;
+		var species = Pool.species[Pool.currentSpecies];
+		var genome = species.genomes[Pool.currentGenome];
+	
+		/*if (forms.ischecked(showNetwork)) {
+			displayGenome(genome);
+		}*/
+	
+		if (Pool.currentFrame % 2 == 0) {
+			Utility.evaluateCurrent();
+		}
+
+		//joypad.set(controller);
+		for (var b in Config.ButtonNames) {
+			if(Utility.controller["P1 " + Config.ButtonNames[b]] == true){
+				Robot.keyToggle(Config.ButtonNames[b], 'down');
 			}
 		}
-	}*/
-	for (var key in Pool.species) {
-		var species = Pool.species[key];
-		for (var k in species.genomes) {
-			var genome = species.genomes[k];
-			total = total + 1;
-			if (genome.fitness != 0) {
-				measured = measured + 1;
+
+		//getPositions();
+		var timeout;
+		if (Config.onLevelEnd) {    // rightmost gives the last frame of the level
+			timeout = Config.TimeoutConstant;
+		}
+	
+		timeout = timeout - 1;
+	
+		var timeoutBonus = Pool.currentFrame / 4;
+		if (timeout + timeoutBonus <= 0) {
+			var fitness = rightmost - pool.currentFrame / 2;  // rightmost gives the last frame of the level
+			if (Config.onLevelEnd) {                
+				fitness += 1000;
+			}
+			if (fitness == 0) {
+				fitness = -1;
+			}
+			genome.fitness = fitness;
+		
+			if (fitness > Pool.maxFitness) {
+				Pool.maxFitness = fitness;
+				//forms.settext(maxFitnessLabel, "Max Fitness: " .. Math.floor(pool.maxFitness));
+				DataStorage.writeToFile("Backup" + "_" + Pool.generation + "_" + /*forms.gettext(saveLoadFile)*/ Config.filename);
+			}
+		
+			console.writeline("Generation: " + Pool.generation + " Species: " + Pool.currentSpecies + " Genome: " + 
+				Pool.currentGenome + " Fitness: " + fitness);
+			Pool.currentSpecies = 1;
+			Pool.currentGenome = 1;
+			while (Utility.fitnessAlreadyMeasured()) {
+				Utility.nextGenome();
+			}
+			Utility.initializeRun();
+		}
+
+		var measured = 0;
+		var total = 0;
+		
+		for (var key in Pool.species) {
+			var species = Pool.species[key];
+			for (var k in species.genomes) {
+				var genome = species.genomes[k];
+				total = total + 1;
+				if (genome.fitness != 0) {
+					measured = measured + 1;
+				}
 			}
 		}
-	}
-	/*if (!forms.ischecked(hideBanner)) {
-		gui.drawText(0, 0, "Gen " .. pool.generation .. " species " .. pool.currentSpecies .. " genome " .. 
-			pool.currentGenome .. " (" .. Math.floor(measured/total*100) .. "%)", 0xFF000000, 11);
-		gui.drawText(0, 12, "Fitness: " .. math.floor(rightmost - (pool.currentFrame) / 2 - 
-			(timeout + timeoutBonus)*2/3), 0xFF000000, 11);
-		gui.drawText(100, 12, "Max Fitness: " .. math.floor(pool.maxFitness), 0xFF000000, 11);
-	}*/
+		/*if (!forms.ischecked(hideBanner)) {
+			gui.drawText(0, 0, "Gen " .. pool.generation .. " species " .. pool.currentSpecies .. " genome " .. 
+				pool.currentGenome .. " (" .. Math.floor(measured/total*100) .. "%)", 0xFF000000, 11);
+			gui.drawText(0, 12, "Fitness: " .. math.floor(rightmost - (pool.currentFrame) / 2 - 
+				(timeout + timeoutBonus)*2/3), 0xFF000000, 11);
+			gui.drawText(100, 12, "Max Fitness: " .. math.floor(pool.maxFitness), 0xFF000000, 11);
+		}*/
 		
-	Pool.currentFrame += 1;
+		Pool.currentFrame += 1;
 
-	//emu.frameadvance();
-//}
+		//emu.frameadvance();
+	}
 }
 
 module.exports = Utility;
