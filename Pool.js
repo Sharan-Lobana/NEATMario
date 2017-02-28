@@ -1,6 +1,6 @@
 var Species = require('./Species');
 var Genome = require('./Genome');
-var Population = 300
+var Config = require('./config');
 
 
 
@@ -28,7 +28,7 @@ var Pool = (function(){
 function initializePool(){
 	var pool = Pool();
  
-	for (i =0;i<Population;i++){	
+	for (i =0;i<Config.Population;i++){	
 		var basic = Genome.basicGenome();
 		Species.addToSpecies(basic);
 	}
@@ -36,10 +36,10 @@ function initializePool(){
 }
 
 function rankGlobally(){	
-	local global = {}
+	var global = {};
 
 	for (var s = 1 in Pool.species){
-		local species = Pool.species[s];
+		var species = Pool.species[s];
 
 		for (var g in species.genomes ){
 			global.push(species.genomes[g]);
