@@ -2,9 +2,9 @@ var config={
 	
 
 //the global variables defines here
-var BoxRadius :6,
-var InputSize :(BoxRadius*2+1)*(BoxRadius*2+1);
-var Inputs = InputSize+1,
+var BoxRadius = 6,
+var InputSize = (BoxRadius*2+1)*(BoxRadius*2+1);
+var Inputs = InputSize+1;
 var  = 6; // Buttonnames  ... check this 
 var Population =300;
 var DeltaDisjoint =2.0;
@@ -22,7 +22,6 @@ var DisableMutationChance = 0.4;
 var EnableMutationChance = 0.2;
 var TimeoutConstant = 20;
 var MaxNodes = 1000000;
-
 	
 };
 
