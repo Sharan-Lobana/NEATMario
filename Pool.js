@@ -21,7 +21,7 @@ var Pool = (function(){
 			'currentGenome':currentGenome,
 			'currentFrame':currentFrame,
 			'maxFitness':maxFitness
-		}
+		};
 
 };
 
