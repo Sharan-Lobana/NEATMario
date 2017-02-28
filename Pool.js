@@ -1,3 +1,8 @@
+var Species = require('./Species');
+var Genome = require('./Genome');
+var Population = 300
+
+
 
 var Pool = (function(){
 
@@ -21,39 +26,38 @@ var Pool = (function(){
 };
 
 function initializePool(){
-	pool = newPool()
+	var pool = Pool();
  
-	for (i in Population){	
-		basic = basicGenome()
-		addToSpecies(basic)
-	
+	for (i =0;i<Population;i++){	
+		var basic = Genome.basicGenome();
+		Species.addToSpecies(basic);
 	}
 
 }
 
-function rankGlobally(){
+function rankGlobally(){	
 	local global = {}
 
-	for (s = 1 in pool.species){
-		local species = pool.species[s]
-		for (g in species.genomes ){
-			table.insert(global, species.genomes[g])
+	for (var s = 1 in Pool.species){
+		local species = Pool.species[s];
+
+		for (var g in species.genomes ){
+			global.push(species.genomes[g]);
 		}
 		
 	}
 
-	table.sort(global, function (a,b)			//check this ..
-		return (a.fitness < b.fitness)
-	end)
+	global.sort( 
+		function (a,b){
+		return (a.fitness < b.fitness);
+		}
+	);
        
-	for(g=1 in global){
-		global[g].globalRank = g
-	}
-	
+
+	for(var g =0 ; g<global.length ; g++ ){
+		global[g].globalRank = g;
+	}	
 
 }
 
-
-
-
-
+module.exports = Pool;
