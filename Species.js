@@ -144,3 +144,4 @@ function addToSpecies(child){
 
 }
 
+module.exports = Species;

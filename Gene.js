@@ -17,7 +17,7 @@ var Gene = function(){
 };
 
 function copyGene(gene){
-	
+
   	gene2 = new Gene();
 	gene2.into = gene.into;
 	gene2.out = gene.out;
@@ -26,3 +26,5 @@ function copyGene(gene){
 	gene2.innovation = gene.innovation;
 	return gene2;
 }
+
+module.exports = Gene;

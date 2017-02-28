@@ -35,6 +35,11 @@ function initializePool(){
 
 }
 
+function newInnovation(){
+	Pool.innovation = Pool.innovation + 1;
+	return Pool.innovation;
+}
+
 function rankGlobally(){	
 	var global = {};
 
