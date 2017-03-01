@@ -1,4 +1,4 @@
-var Config  = require('./config');
+var config  = require('./config');
 var Pool = require('./Pool');
 var Genes = require('./Gene');
 
@@ -52,7 +52,7 @@ function copyGenome(genome){
 function basicGenome(){
 	var genome = new Genome();
 	var innovation = 1;
-	genome.maxneuron = Config.Inputs;
+	genome.maxneuron = config.Inputs;
 	Gemome.mutate(genome);
 
 	return genome;
@@ -71,9 +71,10 @@ function crossover(g1, g2){
 	var child = new Genome();
 
 	var innovations2 = {};
+	var gene={};
 
 	for (i=0;i<g2.genes.length;i++){
-		var gene = g2.genes[i];
+		gene = g2.genes[i];
 		innovations2[gene.innovation] = gene;
 	}
 
@@ -104,17 +105,19 @@ function randomNeuron(genes, nonInput){ 		//check this function
 	var neurons = {};
 
 	if (!nonInput){
-		for (i=1;i<=Config.Inputs;i++){
+		for (var i=1;i<=config.Inputs;i++){
 			neurons[i] = true;
 		}
 	}
-	for (o=1;o<=Config.Outputs;o++){
+	for (var o=1;o<=config.Outputs;o++){
 		neurons[MaxNodes+o] = true;
 	}
-	for (i in genes){
-		if ((!nonInput) || (genes[i].into > Config.Inputs)){
-						neurons[genes[i].into] = true}
-		if ((!nonInput) || (genes[i].out > Config.Inputs)){
+	for (var i in genes){
+		if ((!nonInput) || (genes[i].into > config.Inputs)){
+						
+			neurons[genes[i].into] = true}
+		if ((!nonInput) || (genes[i].out > config.Inputs)){
+			
 			neurons[genes[i].out] = true;
 		}
 	}
@@ -124,15 +127,14 @@ function randomNeuron(genes, nonInput){ 		//check this function
 		count = count + 1;
 	}
 
-	var n = Math.floor(Math.random())*(count-1)+1;
+	var n = Math.floor(Math.random()*(count-1))+1;
 
-	for (k =0;k<neurons.length;k++){
+	for (var k =0;k<neurons.length;k++){
 		n = n-1;
 		if (n == 0)
 			return k;
 	}
 
-	return 0;
 }
 
 
@@ -140,7 +142,7 @@ function containsLink(genes, link){
 	var gene={};
 	for (i=0;i<genes.length;i++){
 	  		gene = genes[i];
-			if (gene.into == link.into && gene.out == link.out){
+			if ((gene.into == link.into) && (gene.out == link.out)){
 				return true;
 			}
 		}
@@ -148,12 +150,13 @@ function containsLink(genes, link){
 
 function pointMutate(genome){
 	var step = genome.mutationRates['step'];
+	var gene={};
 
 	for (i=0;i<genome.genes.length;i++){
 
-		var gene = genome.genes[i];
+		gene = genome.genes[i];
 
-		if (Math.random() < Config.PerturbChance){
+		if (Math.random() < config.PerturbChance){
 			gene.weight = gene.weight + Math.random() * step*2 - step;
 		}else{
 			gene.weight = Math.random()*4-2;
@@ -166,7 +169,7 @@ function linkMutate(genome, forceBias){
 	var neuron2 = randomNeuron(genome.genes, true);
 
 	var newLink = new Gene();
-	if (neuron1 <= Config.Inputs && neuron2 <= Config.Inputs) {
+	if (neuron1 <= config.Inputs && neuron2 <= config.Inputs){
 		//Both input nodes
 		return; 
 	}
@@ -199,10 +202,9 @@ function nodeMutate(genome){
 		return;
 	}
 	
+    genome.maxneuron = genome.maxneuron + 1;
 
-	genome.maxneuron = genome.maxneuron + 1;
-
-	var gene = genome.genes[Math.random(1,genome.genes.length)];
+	var gene = genome.genes[Math.floor(Math.random()*(genome.genes.length-1)+1)];
 
 	if (!gene.enabled ){
 		return;
@@ -226,8 +228,9 @@ function nodeMutate(genome){
 
 function enableDisableMutate(genome, enable){
 	var candidates = {};
+	var gene={};
 	for (var key in genome.genes){
-		var gene = genome.genes[key];
+		 gene = genome.genes[key];
 		if(gene.enabled == !enable){
 			candidates.push(gene);
 		}
@@ -237,14 +240,15 @@ function enableDisableMutate(genome, enable){
 		return;
 	}
 	
-	var gene = candidates[Math.floor((Math.random() * candidates.length) + 1)];
+    gene = candidates[Math.floor((Math.random() * (candidates.length-1)) + 1)];
 	gene.enabled = !gene.enabled;
 }
 
 function mutate(genome){
 
 	for (mutation in genome.mutationRates){
-		if (Math.random(1,2) == 1){
+		var rate = genome.mutationRates[mutation];
+		if (Math.floor(Math.random()+1) == 1){
 			genome.mutationRates[mutation] = 0.95*rate;}
 		else{
 			genme.mutationRates[mutation] = 1.05263*rate;}
@@ -294,72 +298,6 @@ function mutate(genome){
 		}
 		p = p - 1;
 	}
-}
-
-function disjoint(genes1, genes2){
-	var i1 = {};
-	var gene ={};
-
-	for (i in genes1){
-
-	  	gene = genes1[i];
-		i1[gene.innovation] = true;
-	}
-
-	var i2 = {};
-	for (i in genes2){
-
-	  	gene = genes2[i];
-		i2[gene.innovation] = true;
-	}
-
-	var disjointGenes = 0;
-	for (i in genes1){
-	  gene = genes1[i];
-		if (!i2[gene.innovation]){
-			disjointGenes = disjointGenes+1;
-		}
-	}
-
-	for (i in genes2){
-	  gene = genes2[i];
-		if (! i1[gene.innovation]){
-			disjointGenes = disjointGenes+1;
-		}
-	}
-
-	var n = Math.max(genes1.length,genes2.length);
-
-	return disjointGenes / n;
-}
-
-function weights(genes1, genes2){
-
-	var i2 = {};
-	var gene={};
-
-	for (i in genes2){
-
-		gene = genes2[i];
-		i2[gene.innovation] = gene;
-	}
-
-	var sum = 0;
-	var coincident = 0;
-	var gene2={};
-	for (i in genes1){
-
-		gene = genes1[i];
-
-		if (i2[gene.innovation] != null){
-
-		  	gene2 = i2[gene.innovation];
-			sum = sum + Math.abs(gene.weight - gene2.weight);
-			coincident = coincident + 1;
-		}
-	}
-
-	return sum / coincident;
 }
 
 module.exports = Genome;
