@@ -52,7 +52,7 @@ function disjoint(genes1, genes2){
 
 	for (i in genes2){
 	  gene = genes2[i];
-		if (not i1[gene.innovation]){
+		if (!i1[gene.innovation]){
 			disjointGenes = disjointGenes+1;
 		}
 	}

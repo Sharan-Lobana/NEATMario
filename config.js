@@ -3,9 +3,9 @@ var config={
 
 //the global variables defines here
 BoxRadius :6,
-InputSize :(BoxRadius*2+1)*(BoxRadius*2+1),
+InputSize:169, //BoxRadius*2+1)*(BoxRadius*2+1),
 
-Inputs :InputSize+1,
+Inputs :170,//InputSize+1,
 Outputs :5,
 
 ButtonNames : [
@@ -14,7 +14,7 @@ ButtonNames : [
 		"Down",
 		"Left",
 		"Right",
-	]
+	],
 
 Population :300,
 DeltaDisjoint :2.0,
