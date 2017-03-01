@@ -1,6 +1,8 @@
 var Config  = require('./config')
 var Genome = require('./Genome');
 var Pool = require('./Pool');
+var Gene = require('./Gene');
+
 
 
 var Species = (function(){
@@ -26,7 +28,7 @@ function calculateAverageFitness(){
             total = total + genome.globalRank;
         }
 
-        var species.averageFitness = total / Species.genome.length;
+        Species.averageFitness = total / Species.genome.length;
         return Species.averageFitness;
 }
 
@@ -43,21 +45,19 @@ function totalAverageFitness(){
 
 function cullSpecies(cutToOne){
     for(s=0; s<Pool.species.length;s++){
+        var species = Pool.species[s]; 
 
-            var species = Pool.species[s];           
-            species.genomes.sort( function (a,b){
-               return (a.fitness > b.fitness);
-            }
-
-        );
+        species.genomes.sort( function (a,b){
+            return (a.fitness > b.fitness);
+        });
            
-        var remaining = math.ceil(species.genomes.length/2);
+        var remaining = Math.ceil(species.genomes.length/2);
 
         if (cutToOne){
-                remaining = 1;
+            remaining = 1;
         } 
     
-        while (species.genomes.length> remaining){
+        while (species.genomes.length > remaining){
             species.genomes.pop();
         }
     }
@@ -66,12 +66,12 @@ function cullSpecies(cutToOne){
 
 function breedChild(species){
     var child = {};
-    if (math.random() < CrossoverChance){
-        var g1 = species.genomes[math.random(1, species.genomes.length)];
-        var g2 = species.genomes[math.random(1, species.genomes.length)];
+    if (Math.random() < Config.CrossoverChance){
+        var g1 = Species.genomes[Math.random(1, Species.genomes.length)];
+        var g2 = Species.genomes[Math.random(1, Species.genomes.length)];
         child = Genome.crossover(g1, g2);
     }else{
-        var g = species.genomes[math.random(1, species.genomes.length)];
+        var g = Species.genomes[Math.random(1, Species.genomes.length)];
         child = Genome.copyGenome(g);
     }
 
@@ -108,13 +108,13 @@ function removeStaleSpecies(){
 }
 
 function removeWeakSpecies{
-    var survived = {}
+    var survived = {};
  
     var sum = Species.totalAverageFitness();
 
     for (s =0;s<Pool.species.length; s++ ){
         var species = Pool.species[s];
-        breed = math.floor(species.averageFitness / sum * Config.Population);
+        breed = Math.floor(species.averageFitness / sum * Config.Population);
         if (breed >= 1 ){
             survived.push(species);
         }        
@@ -127,10 +127,10 @@ function removeWeakSpecies{
 function addToSpecies(child){
 
     var foundSpecies = false;
-    for (s in Pool.species ){
+
+    for (s in Pool.species){
         var species = Pool.species[s];
         if (!foundSpecies && Genome.sameSpecies(child, species.genomes[1])){
-
             species.genomes.push(child);
             foundSpecies = true;
         }
@@ -142,6 +142,12 @@ function addToSpecies(child){
         Pool.species.push(childSpecies);
     }
 
+}
+
+function sameSpecies(genome1, genome2){
+    var dd = Config.DeltaDisjoint*Gene.disjoint(genome1.genes, genome2.genes);
+    var dw = Config.DeltaWeights*Gene.weights(genome1.genes, genome2.genes);
+    return dd + dw < Config.DeltaThreshold;
 }
 
 module.exports = Species;

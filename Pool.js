@@ -3,7 +3,6 @@ var Genome = require('./Genome');
 var Config = require('./config');
 
 
-
 var Pool = (function(){
 
 	var species = {};
