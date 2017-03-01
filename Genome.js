@@ -104,11 +104,11 @@ function randomNeuron(genes, nonInput){ 		//check this function
 	var neurons = {};
 
 	if (!nonInput){
-		for (i=1,i<=Config.Inputs,i++){
+		for (i=1;i<=Config.Inputs;i++){
 			neurons[i] = true;
 		}
 	}
-	for (o=1,o<=Config.Outputs,o++){
+	for (o=1;o<=Config.Outputs;o++){
 		neurons[MaxNodes+o] = true;
 	}
 	for (i in genes){
@@ -166,7 +166,7 @@ function linkMutate(genome, forceBias){
 	var neuron2 = randomNeuron(genome.genes, true);
 
 	var newLink = new Gene();
-	if (neuron1 <= Config.Inputs and neuron2 <= Config.Inputs) {then}
+	if (neuron1 <= Config.Inputs && neuron2 <= Config.Inputs) {
 		//Both input nodes
 		return; 
 	}
@@ -194,6 +194,7 @@ function linkMutate(genome, forceBias){
 }
 
 function nodeMutate(genome){
+
 	if (genome.genes.length == 0){
 		return;
 	}
@@ -322,7 +323,7 @@ function disjoint(genes1, genes2){
 
 	for (i in genes2){
 	  gene = genes2[i];
-		if (not i1[gene.innovation]){
+		if (! i1[gene.innovation]){
 			disjointGenes = disjointGenes+1;
 		}
 	}

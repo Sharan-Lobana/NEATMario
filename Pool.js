@@ -3,7 +3,7 @@ var Genome = require('./Genome');
 var Config = require('./config');
 
 
-var Pool = (function(){
+var Pool = function(){
 
 	var species = {};
 	var generation = 0;
@@ -20,7 +20,7 @@ var Pool = (function(){
 			'currentGenome':currentGenome,
 			'currentFrame':currentFrame,
 			'maxFitness':maxFitness
-		};
+		}
 
 };
 

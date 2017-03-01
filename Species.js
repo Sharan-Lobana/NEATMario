@@ -5,7 +5,7 @@ var Gene = require('./Gene');
 
 
 
-var Species = (function(){
+var Species = function(){
 
 	var topFitness =  0;
 	var staleness = 0;
@@ -97,7 +97,7 @@ function removeStaleSpecies(){
             species.staleness = species.staleness + 1;
         }
         
-        if (species.staleness < Config.StaleSpecies or species.topFitness >= Pool.maxFitness ){
+        if (species.staleness < Config.StaleSpecies || species.topFitness >= Pool.maxFitness ){
             survived.push(species);
         }        
     } 
@@ -107,7 +107,7 @@ function removeStaleSpecies(){
 
 }
 
-function removeWeakSpecies{
+function removeWeakSpecies(){
     var survived = {};
  
     var sum = Species.totalAverageFitness();
