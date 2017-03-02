@@ -1,6 +1,6 @@
-var Config  = require('./config')
-var Genome = require('./Genome');
-var Gene = require('./Gene');
+// var Config  = require('./config')
+// var Genome = require('./Genome');
+// var Gene = require('./Gene');
 
 
 
@@ -8,7 +8,7 @@ var Species = function(){
 
 	var topFitness =  0;
 	var staleness = 0;
-	var genomes = {};
+	var genomes = [];
 	var averageFitness = 0;
        
     return {
@@ -136,9 +136,9 @@ function addToSpecies(child,pool){
 
     var foundSpecies = false;
 
-    for (s in pool.species){
+    for (var s in pool.species){
         var species = pool.species[s];
-        if (!foundSpecies && sameSpecies(child, species.genomes[1])){
+        if (!foundSpecies && sameSpecies(child, species.genomes[0])){
             species.genomes.push(child);
             foundSpecies = true;
         }
@@ -146,6 +146,7 @@ function addToSpecies(child,pool){
        
     if (!foundSpecies ){
         var childSpecies = new Species();
+        console.log(childSpecies.genomes);
         childSpecies.genomes.push(child);
         pool.species.push(childSpecies);
     }
@@ -161,4 +162,4 @@ function sameSpecies(genome1, genome2){
     console.log("sameSpecies");
 }
 
-module.exports = Species;
+// module.exports = Species;

@@ -1,10 +1,10 @@
-var Config  = require('./config');
-var Pool = require('./Pool');
-var Genes = require('./Gene');
+// var Config  = require('./config');
+// var Pool = require('./Pool');
+// var Genes = require('./Gene');
 
 
 var Genome = function(){
-	var genes = {};
+	var genes = [];
 	var fitness = 0;
 	var adjustedFitness = 0;
 	var network = {};
@@ -49,13 +49,14 @@ function copyGenome(genome){
 	return genome2;
 }
 
-function basicGenome(genome){
-	var genome2 = new Genome();
+function basicGenome(){
+	var genome = new Genome();
+
 	var innovation = 1;
-	genome.maxneuron = Inputs;
-	genome.mutate(genome2);
+	genome.maxneuron = Config.Inputs;
+	mutate(genome);
 	console.log("basicGenome");
-	return genome2;
+	return genome;
 }
 
 
@@ -110,7 +111,7 @@ function randomNeuron(genes, nonInput){ 		//check this function
 		}
 	}
 	for (var o=1;o<=Config.Outputs;o++){
-		neurons[MaxNodes+o] = true;
+		neurons[Config.MaxNodes+o] = true;
 	}
 	for (var i in genes){
 		if ((!nonInput) || (genes[i].into > Config.Inputs)){
@@ -175,7 +176,7 @@ function linkMutate(genome, forceBias){
 		//Both input nodes
 		return; 
 	}
-	if (neuron2 <= Inputs) {
+	if (neuron2 <= Config.Inputs) {
 		// Swap output and input
 		var temp = neuron1;
 		neuron1 = neuron2;
@@ -185,16 +186,17 @@ function linkMutate(genome, forceBias){
 	newLink.into = neuron1;
 	newLink.out = neuron2;
 	if (forceBias) {
-		newLink.into = Inputs
+		newLink.into = Config.Inputs;
 	}
 	
 	if (containsLink(genome.genes, newLink) ){
 		return;
 	}
 
-	newLink.innovation = newInnovation();
+	newLink.innovation = newInnovation(pool);
 	newLink.weight = Math.random()*4-2;
 
+	console.log(genome.genes);
 	genome.genes.push(newLink);
 }
 
@@ -204,32 +206,34 @@ function nodeMutate(genome){
 		return;
 	}
 	
-    genome.maxneuron = genome.maxneuron + 1;
-
-	var gene = genome.genes[Math.floor(Math.random()*(genome.genes.length-1)+1)];
-
+    
+	var gene = genome.genes[Math.floor(Math.random()*(genome.genes.length))];
+	console.log(genome.genes.length);
+	console.log(gene);
 	if (!gene.enabled ){
 		return;
 	}
+	genome.maxneuron = genome.maxneuron + 1;
+
 	
 	gene.enabled = false;
 
 	var gene1 = copyGene(gene);
 	gene1.out = genome.maxneuron;
 	gene1.weight = 1.0;
-	gene1.innovation = newInnovation();
+	gene1.innovation = newInnovation(pool);
 	gene1.enabled = true;
 	genome.genes.push(gene1);
 
 	var gene2 = copyGene(gene);
 	gene2.into = genome.maxneuron;
-	gene2.innovation = newInnovation();
+	gene2.innovation = newInnovation(pool);
 	gene2.enabled = true;
 	genome.genes.push(gene2);
 }
 
 function enableDisableMutate(genome, enable){
-	var candidates = {};
+	var candidates = [];
 	var gene={};
 	for (var key in genome.genes){
 		 gene = genome.genes[key];
@@ -242,7 +246,7 @@ function enableDisableMutate(genome, enable){
 		return;
 	}
 	
-    gene = candidates[Math.floor((Math.random() * (candidates.length-1)) + 1)];
+    gene = candidates[Math.floor(Math.random()*candidates.length)];
 	gene.enabled = !gene.enabled;
 }
 
@@ -302,4 +306,4 @@ function mutate(genome){
 	}
 }
 
-module.exports = Genome;
+// module.exports = Genome;
