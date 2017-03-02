@@ -44,7 +44,7 @@ function tsort(edges) {
 }
 
 var sigmoid = function(val) {
-	return 2/(exp(-2*val)) - 1.0;
+	return 1/(1+exp(-5*val)) ;
 }
 
 //Utility comparison function for sorting genes
@@ -64,18 +64,18 @@ var Neuron = function() {
 var Network = function() {
 	return {
 		neurons:[],
-		numInputs: config.numInputs,
-		numOutputs: config.numOutputs,
-		maxNumNeurons: config.maxNumNeurons,
+		Inputs: Config.Inputs,
+		Outputs: Config.Outputs,
+		maxNumNeurons: Config.MaxNodes,
 	}
 }
 
 var generateNetwork = function(genome) {
 	var network = new Network();
-	for(var i = 0; i < config.numInputs; i++)
+	for(var i = 0; i < Config.Inputs; i++)
 		network.neurons.push(new Neuron());
 
-	for(var i = 0; i < network.numOutputs; i++)
+	for(var i = 0; i < network.Outputs; i++)
 		network.neurons[network.maxNumNeurons + i] = new Neuron();
 
 	genome.genes.sort(geneComparison());
@@ -100,14 +100,14 @@ var generateNetwork = function(genome) {
 //network is network object
 var evaluateNetwork = function(genome,network,inputs) {
 	inputs.push(1);	//Push the bias
-	if(inputs.length != network.numInputs) {
+	if(inputs.length != network.Inputs) {
 		console.log("Incorrect number of inputs for neural network");
-		for(o = [],i = 0; i < network.numOutputs; i++) o.push[0];
+		for(o = [],i = 0; i < network.Outputs; i++) o.push[0];
 		return o;	//return
 	}
 
 	//Initialize the inputs
-	for(var i = 0; i < network.numInputs; i++) {
+	for(var i = 0; i < network.Inputs; i++) {
 		network.neurons[i].value = inputs[i];
 	}
 
@@ -130,7 +130,7 @@ var evaluateNetwork = function(genome,network,inputs) {
 	//Evaluate the hidden and output layer neurons
 	for(var i in sorted) {
     ind = sorted[i];
-    if(ind >= network.numInputs) {
+    if(ind >= network.Inputs) {
       var neuron = network.neurons[ind];
   		for(var j = 0; j < neuron.incoming.length; j++) {
   			var incoming = neuron.incoming[j];	//Pick a connection
@@ -147,7 +147,7 @@ var evaluateNetwork = function(genome,network,inputs) {
 
 	var o = [];	//Output list
   //Populate the output list
-	for(var i = network.maxNumNeurons; i < network.maxNumNeurons + network.numOutputs; i++) {
+	for(var i = network.maxNumNeurons; i < network.maxNumNeurons + network.Outputs; i++) {
 			o.push(network.neurons[i].value)
 		}
 	return o;

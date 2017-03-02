@@ -1,17 +1,18 @@
-var Species = require('./Species');
-var Genome = require('./Genome');
-var Config = require('./config');
+// var Species = require('./Species');
+// var Genome = require('./Genome');
+// var Config = require('./config');
 
 
 var Pool = function(){
 
-	var species = {};
+	var species = [];
 	var generation = 0;
 	var innovation = 6; //= Outputs,
 	var currentSpecies =1;
 	var currentGenome = 1;
 	var currentFrame = 0;
 	var maxFitness = 0;
+	var shouldStop = false;
 
 	return {'species':species,
 			'generation':generation,
@@ -19,19 +20,21 @@ var Pool = function(){
 			'currentSpecies':currentSpecies,
 			'currentGenome':currentGenome,
 			'currentFrame':currentFrame,
-			'maxFitness':maxFitness
+			'maxFitness':maxFitness,
+			'shouldStop':shouldStop
 		}
 
 };
 
 function initializePool(){
-	var pool = new Pool();
+	pool = new Pool();
  
 	for (i =0;i<Config.Population;i++){	
 		var basic = basicGenome();
-		addToSpecies(basic);
+		addToSpecies(basic,pool);
 	}
 
+	return pool;
 }
 
 function newInnovation(pool){
@@ -64,4 +67,4 @@ function rankGlobally(pool){
 
 }
 
-module.exports = Pool;
+// module.exports = Pool;

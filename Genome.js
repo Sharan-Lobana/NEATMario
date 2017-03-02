@@ -1,10 +1,10 @@
-var Config  = require('./config');
-var Pool = require('./Pool');
-var Genes = require('./Gene');
+// var Config  = require('./config');
+// var Pool = require('./Pool');
+// var Genes = require('./Gene');
 
 
 var Genome = function(){
-	var genes = {};
+	var genes = [];
 	var fitness = 0;
 	var adjustedFitness = 0;
 	var network = {};
@@ -49,13 +49,14 @@ function copyGenome(genome){
 	return genome2;
 }
 
-function basicGenome(genome){
-	var genome2 = new Genome();
+function basicGenome(){
+	var genome = new Genome();
+
 	var innovation = 1;
-	genome.maxneuron = Inputs;
-	genome.mutate(genome2);
+	genome.maxneuron = Config.Inputs;
+	mutate(genome);
 	console.log("basicGenome");
-	return genome2;
+	return genome;
 }
 
 
@@ -85,7 +86,7 @@ function crossover(g1, g2){
 
 	  	gene1 = g1.genes[i];
 		gene2 = innovations2[gene1.innovation];
-		if (gene2 != null && (2*Math.random()) == 1 && gene2.enabled){
+		if (gene2 != null && (Math.random() < 0.5) && gene2.enabled){
 			child.genes.push(copyGene(gene2));
 		}else{
 			child.genes.push(copyGene(gene1));
@@ -100,17 +101,16 @@ function crossover(g1, g2){
 	console.log("crossover");
 	return child;
 }
-
 function randomNeuron(genes, nonInput){ 		//check this function
 	var neurons = {};
 
 	if (!nonInput){
-		for (var i=1;i<=Config.Inputs;i++){
+		for (var i=0;i<Config.Inputs;i++){
 			neurons[i] = true;
 		}
 	}
-	for (var o=1;o<=Config.Outputs;o++){
-		neurons[MaxNodes+o] = true;
+	for (var o=0;o<Config.Outputs;o++){
+		neurons[Config.MaxNodes+o] = true;
 	}
 	for (var i in genes){
 		if ((!nonInput) || (genes[i].into > Config.Inputs)){
@@ -123,19 +123,20 @@ function randomNeuron(genes, nonInput){ 		//check this function
 	}
 
 	var count = 0;
-	for (i =0;i<neurons.length;i++){
-		count = count + 1;
+	for(var i in neurons)
+	{
+		count += 1;
 	}
 
-	var n = Math.floor(Math.random()*(count-1))+1;
+	var n = Math.floor(Math.random()*count);
 
-	for (var k =0;k<neurons.length;k++){
+	for(var i in neurons) {
 		n = n-1;
-		if (n == 0)
-			return k;
+		if(n==0)
+			return i;
 	}
 
-	console.log("randomNeuron");
+	// console.log("randomNeuron");
 }
 
 
@@ -169,32 +170,35 @@ function pointMutate(genome){
 function linkMutate(genome, forceBias){
 	var neuron1 = randomNeuron(genome.genes, false);
 	var neuron2 = randomNeuron(genome.genes, true);
+	console.log(neuron1+" "+neuron2);
 
 	var newLink = new Gene();
 	if (neuron1 <= Config.Inputs && neuron2 <= Config.Inputs){
 		//Both input nodes
 		return; 
 	}
-	if (neuron2 <= Inputs) {
+	if (neuron2 <= Config.Inputs) {
 		// Swap output and input
 		var temp = neuron1;
 		neuron1 = neuron2;
 		neuron2 = temp;
 	}
-
+	if(neuron1 && neuron2){
 	newLink.into = neuron1;
 	newLink.out = neuron2;
+	}
 	if (forceBias) {
-		newLink.into = Inputs
+		newLink.into = Config.Inputs;
 	}
 	
 	if (containsLink(genome.genes, newLink) ){
 		return;
 	}
 
-	newLink.innovation = newInnovation();
+	newLink.innovation = newInnovation(pool);
 	newLink.weight = Math.random()*4-2;
 
+	console.log(genome.genes);
 	genome.genes.push(newLink);
 }
 
@@ -204,32 +208,34 @@ function nodeMutate(genome){
 		return;
 	}
 	
-    genome.maxneuron = genome.maxneuron + 1;
-
-	var gene = genome.genes[Math.floor(Math.random()*(genome.genes.length-1)+1)];
-
+    
+	var gene = genome.genes[Math.floor(Math.random()*(genome.genes.length))];
+	console.log(genome.genes.length);
+	console.log(gene);
 	if (!gene.enabled ){
 		return;
 	}
+	genome.maxneuron = genome.maxneuron + 1;
+
 	
 	gene.enabled = false;
 
 	var gene1 = copyGene(gene);
 	gene1.out = genome.maxneuron;
 	gene1.weight = 1.0;
-	gene1.innovation = newInnovation();
+	gene1.innovation = newInnovation(pool);
 	gene1.enabled = true;
 	genome.genes.push(gene1);
 
 	var gene2 = copyGene(gene);
 	gene2.into = genome.maxneuron;
-	gene2.innovation = newInnovation();
+	gene2.innovation = newInnovation(pool);
 	gene2.enabled = true;
 	genome.genes.push(gene2);
 }
 
 function enableDisableMutate(genome, enable){
-	var candidates = {};
+	var candidates = [];
 	var gene={};
 	for (var key in genome.genes){
 		 gene = genome.genes[key];
@@ -242,7 +248,7 @@ function enableDisableMutate(genome, enable){
 		return;
 	}
 	
-    gene = candidates[Math.floor((Math.random() * (candidates.length-1)) + 1)];
+    gene = candidates[Math.floor(Math.random()*candidates.length)];
 	gene.enabled = !gene.enabled;
 }
 
@@ -250,7 +256,7 @@ function mutate(genome){
 
 	for (mutation in genome.mutationRates){
 		var rate = genome.mutationRates[mutation];
-		if (Math.floor(Math.random()+1) == 1){
+		if (Math.random() > 0.5){
 			genome.mutationRates[mutation] = 0.95*rate;}
 		else{
 			genome.mutationRates[mutation] = 1.05263*rate;}
@@ -302,4 +308,4 @@ function mutate(genome){
 	}
 }
 
-module.exports = Genome;
+// module.exports = Genome;

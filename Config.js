@@ -1,12 +1,12 @@
-var config={
+var Config={
 	
 
 //the global variables defines here
 BoxRadius :6,
 InputSize:169, //BoxRadius*2+1)*(BoxRadius*2+1),
 
-Inputs :170,//InputSize+1,
-Outputs :5,
+Inputs :2,//InputSize+1,
+Outputs :1,
 
 ButtonNames : [
 		"A",
@@ -16,7 +16,7 @@ ButtonNames : [
 		"Right",
 	],
 
-Population :300,
+Population :50,
 DeltaDisjoint :2.0,
 DeltaWeights :0.4,
 DeltaThreshold :1.0,
@@ -35,8 +35,7 @@ MaxNodes :1000000
 	
 };
 
-config.sigmoid = function(x){
+Config.sigmoid = function(x){
 	return 2/(1+math.exp(-4.9*x))-1
 }
 
-module.exports = config;
