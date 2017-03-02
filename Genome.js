@@ -1,4 +1,4 @@
-var config  = require('./config');
+var Config  = require('./config');
 var Pool = require('./Pool');
 var Genes = require('./Gene');
 
@@ -11,13 +11,13 @@ var Genome = function(){
 	var maxneuron = 0;
 	var globalRank = 0;
 	var mutationRates = {};
-	mutationRates['connections'] = config.MutateConnectionsChance;
-	mutationRates['link'] = config.LinkMutationChance;
-	mutationRates['bias'] = config.BiasMutationChance;
-	mutationRates['node'] = config.NodeMutationChance;
-	mutationRates['enable'] = config.EnableMutationChance;
-	mutationRates['disable'] = config.DisableMutationChance;
-	mutationRates['step'] = config.StepSize;
+	mutationRates['connections'] = Config.MutateConnectionsChance;
+	mutationRates['link'] = Config.LinkMutationChance;
+	mutationRates['bias'] = Config.BiasMutationChance;
+	mutationRates['node'] = Config.NodeMutationChance;
+	mutationRates['enable'] = Config.EnableMutationChance;
+	mutationRates['disable'] = Config.DisableMutationChance;
+	mutationRates['step'] = Config.StepSize;
 
 	return{
 		'genes':genes,
@@ -38,30 +38,30 @@ function copyGenome(genome){
 		genome2.genes.push(copyGene(genome.genes[g]));
 	}
 
-	genome2.maxneuron = Genome.maxneuron;
-	genome2.mutationRates['connections'] = Genome.mutationRates['connections'];
-	genome2.mutationRates['link'] = Genome.mutationRates['link'];
-	genome2.mutationRates['bias'] = Genome.mutationRates['bias'];
-	genome2.mutationRates['node'] = Genome.mutationRates['node'];
-	genome2.mutationRates['enable'] = Genome.mutationRates['enable'];
-	genome2.mutationRates['disable'] = Genome.mutationRates['disable'];
-
+	genome2.maxneuron = genome.maxneuron;
+	genome2.mutationRates['connections'] = genome.mutationRates['connections'];
+	genome2.mutationRates['link'] = genome.mutationRates['link'];
+	genome2.mutationRates['bias'] = genome.mutationRates['bias'];
+	genome2.mutationRates['node'] = genome.mutationRates['node'];
+	genome2.mutationRates['enable'] = genome.mutationRates['enable'];
+	genome2.mutationRates['disable'] = genome.mutationRates['disable'];
+	console.log("copyGenome");
 	return genome2;
 }
 
-function basicGenome(){
-	var genome = new Genome();
+function basicGenome(genome){
+	var genome2 = new Genome();
 	var innovation = 1;
-	genome.maxneuron = config.Inputs;
-	Gemome.mutate(genome);
-
-	return genome;
+	genome.maxneuron = Inputs;
+	genome.mutate(genome2);
+	console.log("basicGenome");
+	return genome2;
 }
 
 
 
 function crossover(g1, g2){
-	// Make sure g1 is the higher fitness genome
+	// Make sure g1 is the highers fitness genome
 	if (g2.fitness > g1.fitness){
 		var tempg = g1;
 		g1 = g2;
@@ -97,7 +97,7 @@ function crossover(g1, g2){
 	for (mutation in g1.mutationRates){
 		child.mutationRates[mutation] = g1.mutationRates[mutation];
 	}
-
+	console.log("crossover");
 	return child;
 }
 
@@ -105,18 +105,18 @@ function randomNeuron(genes, nonInput){ 		//check this function
 	var neurons = {};
 
 	if (!nonInput){
-		for (var i=1;i<=config.Inputs;i++){
+		for (var i=1;i<=Config.Inputs;i++){
 			neurons[i] = true;
 		}
 	}
-	for (var o=1;o<=config.Outputs;o++){
+	for (var o=1;o<=Config.Outputs;o++){
 		neurons[MaxNodes+o] = true;
 	}
 	for (var i in genes){
-		if ((!nonInput) || (genes[i].into > config.Inputs)){
+		if ((!nonInput) || (genes[i].into > Config.Inputs)){
 						
 			neurons[genes[i].into] = true}
-		if ((!nonInput) || (genes[i].out > config.Inputs)){
+		if ((!nonInput) || (genes[i].out > Config.Inputs)){
 			
 			neurons[genes[i].out] = true;
 		}
@@ -135,6 +135,7 @@ function randomNeuron(genes, nonInput){ 		//check this function
 			return k;
 	}
 
+	console.log("randomNeuron");
 }
 
 
@@ -146,6 +147,7 @@ function containsLink(genes, link){
 				return true;
 			}
 		}
+	
 }
 
 function pointMutate(genome){
@@ -156,7 +158,7 @@ function pointMutate(genome){
 
 		gene = genome.genes[i];
 
-		if (Math.random() < config.PerturbChance){
+		if (Math.random() < Config.PerturbChance){
 			gene.weight = gene.weight + Math.random() * step*2 - step;
 		}else{
 			gene.weight = Math.random()*4-2;
@@ -169,7 +171,7 @@ function linkMutate(genome, forceBias){
 	var neuron2 = randomNeuron(genome.genes, true);
 
 	var newLink = new Gene();
-	if (neuron1 <= config.Inputs && neuron2 <= config.Inputs){
+	if (neuron1 <= Config.Inputs && neuron2 <= Config.Inputs){
 		//Both input nodes
 		return; 
 	}
@@ -190,7 +192,7 @@ function linkMutate(genome, forceBias){
 		return;
 	}
 
-	newLink.innovation = Pool.newInnovation();
+	newLink.innovation = newInnovation();
 	newLink.weight = Math.random()*4-2;
 
 	genome.genes.push(newLink);
@@ -212,16 +214,16 @@ function nodeMutate(genome){
 	
 	gene.enabled = false;
 
-	var gene1 = Gene.copyGene(gene);
+	var gene1 = copyGene(gene);
 	gene1.out = genome.maxneuron;
 	gene1.weight = 1.0;
-	gene1.innovation = Pool.newInnovation();
+	gene1.innovation = newInnovation();
 	gene1.enabled = true;
 	genome.genes.push(gene1);
 
 	var gene2 = copyGene(gene);
 	gene2.into = genome.maxneuron;
-	gene2.innovation = Pool.newInnovation();
+	gene2.innovation = newInnovation();
 	gene2.enabled = true;
 	genome.genes.push(gene2);
 }
@@ -251,18 +253,18 @@ function mutate(genome){
 		if (Math.floor(Math.random()+1) == 1){
 			genome.mutationRates[mutation] = 0.95*rate;}
 		else{
-			genme.mutationRates[mutation] = 1.05263*rate;}
+			genome.mutationRates[mutation] = 1.05263*rate;}
 	}
 
 	if (Math.random() < genome.mutationRates['connections'] ){
-		Genome.pointMutate(genome);
+		pointMutate(genome);
 	}
 
 	var p = genome.mutationRates['link'];
 
 	while(p > 0){
 		if (Math.random() < p ){
-			Genome.linkMutate(genome, false);
+			linkMutate(genome, false);
 		}
 		p = p - 1;
 	}
@@ -270,7 +272,7 @@ function mutate(genome){
 	p = genome.mutationRates['bias'];
 	while(p > 0 ){
 		if (Math.random() < p) {
-			Genome.linkMutate(genome, true);
+			linkMutate(genome, true);
 		}
 		p = p - 1;
 	}
@@ -278,7 +280,7 @@ function mutate(genome){
 	p = genome.mutationRates['node'];
 	while (p > 0 ){
 		if (Math.random()<p) {
-			Genome.nodeMutate(genome);
+			nodeMutate(genome);
 		}
 		p = p - 1;
 	}
@@ -286,7 +288,7 @@ function mutate(genome){
 	p = genome.mutationRates['enable'];
 	while (p > 0 ){
 		if (Math.random() < p ){
-			Genome.enableDisableMutate(genome, true);
+			enableDisableMutate(genome, true);
 		}
 		p = p - 1;
 	}
@@ -294,7 +296,7 @@ function mutate(genome){
 	p = genome.mutationRates['disable'];
 	while (p > 0){
 		if (Math.random() < p ){
-			Genome.enableDisableMutate(genome, false);
+			enableDisableMutate(genome, false);
 		}
 		p = p - 1;
 	}

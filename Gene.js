@@ -14,6 +14,17 @@ var Gene = function(){
 	}
 };
 
+
+var Gene = {
+	into : 0,
+	out : 0,
+  	weight : 0.0,
+	enabled : true,
+	innovation : 0,
+};
+
+
+
 function copyGene(gene){
 
   	gene2 = new Gene();
