@@ -25,25 +25,25 @@ var Pool = function(){
 };
 
 function initializePool(){
-	var pool = Pool();
+	var pool = new Pool();
  
-	for (i =0;i<Config.Population;i++){	
-		var basic = Genome.basicGenome();
-		Species.addToSpecies(basic);
+	for (i =0;i<Population;i++){	
+		var basic = basicGenome();
+		addToSpecies(basic);
 	}
 
 }
 
-function newInnovation(){
-	Pool.innovation = Pool.innovation + 1;
-	return Pool.innovation;
+function newInnovation(pool){
+	pool.innovation = pool.innovation + 1;
+	return pool.innovation;
 }
 
-function rankGlobally(){	
+function rankGlobally(pool){	
 	var global = {};
 
-	for (var s = 1 in Pool.species){
-		var species = Pool.species[s];
+	for (var s = 1 in pool.species){
+		var species = pool.species[s];
 
 		for (var g in species.genomes ){
 			global.push(species.genomes[g]);
