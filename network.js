@@ -43,12 +43,6 @@ function tsort(edges) {
   return sorted;
 }
 
-
-// for node.js
-if (typeof exports == 'object' && exports === this) {
-  module.exports = tsort;
-  if (process.argv[1] === __filename) tsortTest();
-}
 var sigmoid = function(val) {
 	return 2/(exp(-2*val)) - 1.0;
 }
@@ -104,14 +98,12 @@ var generateNetwork = function(genome) {
 
 //inputs is list of inputs
 //network is network object
-//TODO:Ensure that neurons in network are in topological order
-//TODO:Ensure outputs are in predefined order
 var evaluateNetwork = function(genome,network,inputs) {
-	inputs.push(1);	//Push the bias 
+	inputs.push(1);	//Push the bias
 	if(inputs.length != network.numInputs) {
 		console.log("Incorrect number of inputs for neural network");
 		for(o = [],i = 0; i < network.numOutputs; i++) o.push[0];
-		return o;	//return 
+		return o;	//return
 	}
 
 	//Initialize the inputs
@@ -121,10 +113,7 @@ var evaluateNetwork = function(genome,network,inputs) {
 
 	var edges = [];
 	for(var i = 0; i < genome.genes.length; i++) {
-		//If the connection links two hidden layer neurons
-		if(genome.genes[i].into >= network.numInputs && genome.genes[i].out < network.maxNumNeurons) {
-			edges.push([genome.genes[i].into,genome.genes[i].out]);
-		}
+		edges.push([genome.genes[i].into,genome.genes[i].out]);
 	}
 	var sorted;
 	try {
@@ -136,43 +125,30 @@ var evaluateNetwork = function(genome,network,inputs) {
 	  }
 
 	var sum = 0;
+  var ind;
+  
+	//Evaluate the hidden and output layer neurons
+	for(var i in sorted) {
+    ind = sorted[i];
+    if(ind >= network.numInputs) {
+      var neuron = network.neurons[ind];
+  		for(var j = 0; j < neuron.incoming.length; j++) {
+  			var incoming = neuron.incoming[j];	//Pick a connection
+  			var other = network.neurons[incoming.into];	//Find other end of the connection
+  			//Multiply other end of the connection to weight of the connection and add to sum
+  			sum = sum + incoming.weight * other.value;
+  		}
 
-	//TODO: Use this sorted list to modify the order of neurons in network.neurons
-	if(sorted) {
-
-	}
-	//Evaluate the input layer neurons
-	for(var i = network.numInputs; i < network.neurons.length - network.numOutputs; i++) {
-		var neuron = network.neurons[i];
-		for(var j = 0; j < neuron.incoming.length; j++) {
-			var incoming = neuron.incoming[j];	//Pick a connection 
-			var other = network.neurons[incoming.into];	//Find other end of the connection
-			//Multiply other end of the connection to weight of the connection and add to sum
-			sum = sum + incoming.weight * other.value;	
-		}
-
-		if(neuron.incoming.length > 0) {
-			network.neurons[i].value = sigmoid(sum);
-		}
-		
+  		if(neuron.incoming.length > 0) {
+  			network.neurons[i].value = sigmoid(sum);
+  		}
+    }
 	}
 
 	var o = [];	//Output list
-	//Evaluate the output neurons
+  //Populate the output list
 	for(var i = network.maxNumNeurons; i < network.maxNumNeurons + network.numOutputs; i++) {
-		var neuron = network.neurons[i];
-		for(var j = 0; j < neuron.incoming.length; j++) {
-			var incoming = neuron.incoming[j];	//Pick a connection 
-			var other = network.neurons[incoming.into];	//Find other end of the connection
-			//Multiply other end of the connection to weight of the connection and add to sum
-			sum = sum + incoming.weight * other.value;	
-		}
-
-		if(neuron.incoming.length > 0) {
-			network.neurons[i].value = sigmoid(sum);
 			o.push(network.neurons[i].value)
 		}
-		
-	}
 	return o;
 }
