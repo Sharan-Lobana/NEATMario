@@ -27,7 +27,7 @@ var Pool = function(){
 function initializePool(){
 	var pool = new Pool();
  
-	for (i =0;i<Population;i++){	
+	for (i =0;i<Config.Population;i++){	
 		var basic = basicGenome();
 		addToSpecies(basic);
 	}

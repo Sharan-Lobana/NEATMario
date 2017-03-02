@@ -61,7 +61,7 @@ function basicGenome(genome){
 
 
 function crossover(g1, g2){
-	// Make sure g1 is the higher fitness genome
+	// Make sure g1 is the highers fitness genome
 	if (g2.fitness > g1.fitness){
 		var tempg = g1;
 		g1 = g2;
@@ -253,18 +253,18 @@ function mutate(genome){
 		if (Math.floor(Math.random()+1) == 1){
 			genome.mutationRates[mutation] = 0.95*rate;}
 		else{
-			genme.mutationRates[mutation] = 1.05263*rate;}
+			genome.mutationRates[mutation] = 1.05263*rate;}
 	}
 
 	if (Math.random() < genome.mutationRates['connections'] ){
-		Genome.pointMutate(genome);
+		pointMutate(genome);
 	}
 
 	var p = genome.mutationRates['link'];
 
 	while(p > 0){
 		if (Math.random() < p ){
-			Genome.linkMutate(genome, false);
+			linkMutate(genome, false);
 		}
 		p = p - 1;
 	}
@@ -272,7 +272,7 @@ function mutate(genome){
 	p = genome.mutationRates['bias'];
 	while(p > 0 ){
 		if (Math.random() < p) {
-			Genome.linkMutate(genome, true);
+			linkMutate(genome, true);
 		}
 		p = p - 1;
 	}
@@ -280,7 +280,7 @@ function mutate(genome){
 	p = genome.mutationRates['node'];
 	while (p > 0 ){
 		if (Math.random()<p) {
-			Genome.nodeMutate(genome);
+			nodeMutate(genome);
 		}
 		p = p - 1;
 	}
@@ -288,7 +288,7 @@ function mutate(genome){
 	p = genome.mutationRates['enable'];
 	while (p > 0 ){
 		if (Math.random() < p ){
-			Genome.enableDisableMutate(genome, true);
+			enableDisableMutate(genome, true);
 		}
 		p = p - 1;
 	}
@@ -296,7 +296,7 @@ function mutate(genome){
 	p = genome.mutationRates['disable'];
 	while (p > 0){
 		if (Math.random() < p ){
-			Genome.enableDisableMutate(genome, false);
+			enableDisableMutate(genome, false);
 		}
 		p = p - 1;
 	}

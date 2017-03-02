@@ -1,6 +1,5 @@
 var Config  = require('./config')
 var Genome = require('./Genome');
-var Pool = require('./Pool');
 var Gene = require('./Gene');
 
 
