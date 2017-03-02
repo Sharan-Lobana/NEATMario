@@ -86,7 +86,7 @@ function crossover(g1, g2){
 
 	  	gene1 = g1.genes[i];
 		gene2 = innovations2[gene1.innovation];
-		if (gene2 != null && (2*Math.random()) == 1 && gene2.enabled){
+		if (gene2 != null && (Math.random() < 0.5) && gene2.enabled){
 			child.genes.push(copyGene(gene2));
 		}else{
 			child.genes.push(copyGene(gene1));
@@ -101,16 +101,15 @@ function crossover(g1, g2){
 	console.log("crossover");
 	return child;
 }
-
 function randomNeuron(genes, nonInput){ 		//check this function
 	var neurons = {};
 
 	if (!nonInput){
-		for (var i=1;i<=Config.Inputs;i++){
+		for (var i=0;i<Config.Inputs;i++){
 			neurons[i] = true;
 		}
 	}
-	for (var o=1;o<=Config.Outputs;o++){
+	for (var o=0;o<Config.Outputs;o++){
 		neurons[Config.MaxNodes+o] = true;
 	}
 	for (var i in genes){
@@ -124,19 +123,20 @@ function randomNeuron(genes, nonInput){ 		//check this function
 	}
 
 	var count = 0;
-	for (i =0;i<neurons.length;i++){
-		count = count + 1;
+	for(var i in neurons)
+	{
+		count += 1;
 	}
 
-	var n = Math.floor(Math.random()*(count-1))+1;
+	var n = Math.floor(Math.random()*count);
 
-	for (var k =0;k<neurons.length;k++){
+	for(var i in neurons) {
 		n = n-1;
-		if (n == 0)
-			return k;
+		if(n==0)
+			return i;
 	}
 
-	console.log("randomNeuron");
+	// console.log("randomNeuron");
 }
 
 
@@ -170,6 +170,7 @@ function pointMutate(genome){
 function linkMutate(genome, forceBias){
 	var neuron1 = randomNeuron(genome.genes, false);
 	var neuron2 = randomNeuron(genome.genes, true);
+	console.log(neuron1+" "+neuron2);
 
 	var newLink = new Gene();
 	if (neuron1 <= Config.Inputs && neuron2 <= Config.Inputs){
@@ -182,9 +183,10 @@ function linkMutate(genome, forceBias){
 		neuron1 = neuron2;
 		neuron2 = temp;
 	}
-
+	if(neuron1 && neuron2){
 	newLink.into = neuron1;
 	newLink.out = neuron2;
+	}
 	if (forceBias) {
 		newLink.into = Config.Inputs;
 	}
@@ -254,7 +256,7 @@ function mutate(genome){
 
 	for (mutation in genome.mutationRates){
 		var rate = genome.mutationRates[mutation];
-		if (Math.floor(Math.random()+1) == 1){
+		if (Math.random() > 0.5){
 			genome.mutationRates[mutation] = 0.95*rate;}
 		else{
 			genome.mutationRates[mutation] = 1.05263*rate;}

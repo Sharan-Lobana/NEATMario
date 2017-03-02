@@ -96,8 +96,8 @@ function removeStaleSpecies(pool){
             return (a.fitness > b.fitness);
         });
            
-        if (species.genomes[1].fitness > species.topFitness) {
-            species.topFitness = species.genomes[1].fitness;
+        if (species.genomes[0].fitness > species.topFitness) {
+            species.topFitness = species.genomes[0].fitness;
             species.staleness = 0;
         } else{
             species.staleness = species.staleness + 1;

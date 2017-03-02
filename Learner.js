@@ -1,6 +1,6 @@
 var xor = [[0,0,0],[0,1,1],[1,0,1],[1,1,0]];
 var xorindex = -1;
-
+// addfa
 var getInputs = function(){
 	xorindex = (xorindex + 1)%4
 	return xor[xorindex];
@@ -76,7 +76,7 @@ var evaluateCurrent = function(pool){
 	var inputs = getInputs();  // getInputs() must be modified, <Adapter>.getInputs() must be present where Adapter.js is the file responsible for getting inputs
 	var trueOutput = inputs[2];
 	inputs.pop();
-	var predOutput = evaluateNetwork(genome.network, inputs);  // inputs is only used here
+	var predOutput = evaluateNetwork(genome,network, inputs);  // inputs is only used here
 	sqerror += Math.pow(predOutput-trueOutput,2);	
 	if(Math.abs(predOutput - trueOutput) < 0.5)
 		misclassifications -= 1;
