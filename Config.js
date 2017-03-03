@@ -31,7 +31,8 @@ StepSize :0.1,
 DisableMutationChance :0.4,
 EnableMutationChance :0.2,
 TimeoutConstant :20,
-MaxNodes :1000000
+MaxNodes :1000
+
 	
 };
 
