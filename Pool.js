@@ -7,7 +7,7 @@ var Pool = function(){
 
 	var species = [];
 	var generation = 0;
-	var innovation = 6; //= Outputs,
+	var innovation = Config.Inputs*Config.Outputs;
 	var currentSpecies =1;
 	var currentGenome = 1;
 	var currentFrame = 0;
@@ -28,9 +28,9 @@ var Pool = function(){
 
 function initializePool(){
 	pool = new Pool();
- 
-	for (i =0;i<Config.Population;i++){	
-		var basic = basicGenome();
+
+	for (i =0;i<Config.Population;i++){
+		var basic = basicGenome();	//Comeback
 		addToSpecies(basic,pool);
 	}
 
@@ -42,7 +42,7 @@ function newInnovation(pool){
 	return pool.innovation;
 }
 
-function rankGlobally(pool){	
+function rankGlobally(pool){
 	var global = {};
 
 	for (var s = 1 in pool.species){
@@ -51,19 +51,19 @@ function rankGlobally(pool){
 		for (var g in species.genomes ){
 			global.push(species.genomes[g]);
 		}
-		
+
 	}
 
-	global.sort( 
+	global.sort(
 		function (a,b){
 		return (a.fitness < b.fitness);
 		}
 	);
-       
+
 
 	for(var g =0 ; g<global.length ; g++ ){
 		global[g].globalRank = g;
-	}	
+	}
 
 }
 

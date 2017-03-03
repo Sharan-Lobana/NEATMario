@@ -51,8 +51,6 @@ function copyGenome(genome){
 
 function basicGenome(){
 	var genome = new Genome();
-
-	var innovation = 1;
 	genome.maxneuron = Config.Inputs;
 	mutate(genome);
 	console.log("basicGenome");
