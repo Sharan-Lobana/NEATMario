@@ -71,11 +71,11 @@ function cullSpecies(cutToOne,pool){
 function breedChild(species){
     var child = {};
     if (Math.random() < Config.CrossoverChance){
-        var g1 = species.genomes[Math.random(1, species.genomes.length)];
-        var g2 = species.genomes[Math.random(1, species.genomes.length)];
+        var g1 = species.genomes[Math.floor(Math.random() * species.genomes.length)];
+        var g2 = species.genomes[Math.floor(Math.random() * species.genomes.length)];
         child = crossover(g1, g2);
     }else{
-        var g = species.genomes[Math.random(1, species.genomes.length)];
+        var g = species.genomes[Math.floor(Math.random() * species.genomes.length)];
         child = copyGenome(g);
     }
 

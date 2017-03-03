@@ -35,7 +35,7 @@ var Utility = function(){
 	}
 	cullSpecies(true, pool) // Cull all but the top member of each species
 	while (children.length + pool.species.length < Config.Population) {
-		var index = Math.floor((Math.random() * pool.species.length) + 1);
+		var index = Math.floor((Math.random() * pool.species.length));
 		var species = pool.species[index];
 		children.push(breedChild(species));
 	}
