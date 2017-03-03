@@ -1,21 +1,20 @@
-var xor = [[0, 0, 0], [0, 1, 1], [1, 0, 1], [1, 1, 0]];
+var xor = [[0,0,0],[0,1,1],[1,0,1],[1,1,0]];
 var xorindex = -1;
+// addfa
 var getInputs = function(){
-	xorindex = (xorindex + 1) % 4
+	xorindex = (xorindex + 1)%4
 	return xor[xorindex];
 }
 
-// error on purpose
-
 var Utility = function(){
 	return {
-	controller: {A: false, Left: false, Right: false, Up: false, Down: false}, 	
+	controller: {A: false, Left: false, Right: false, Up: false, Down: false},
 	}
-	
+
 }
 // 1
  var newGeneration = function(pool){
-	cullSpecies(false, pool); // Cull the bottom half of each species
+	cullSpecies(false,pool); // Cull the bottom half of each species
 	rankGlobally(pool);
 	removeStaleSpecies(pool);
 	rankGlobally(pool);
@@ -25,15 +24,15 @@ var Utility = function(){
 	}
 	removeWeakSpecies();
 	var sum = totalAverageFitness(pool);
-	var children = {};
+	var children = [];
 	for (var s in pool.species){
 		var species = pool.species[s];
 		var breed = Math.floor(species.averageFitness / sum * Config.Population) - 1;
-		for (var i = 0; i < breed; i++) {
+		for (var i = 1; i <= breed; i++) {
 			children.push(breedChild(species));
 		}
 	}
-	cullSpecies(true, pool) // Cull all but the top member of each species
+	cullSpecies(true,pool) // Cull all but the top member of each species
 	while (children.length + pool.species.length < Config.Population) {
 		var index = Math.floor((Math.random() * pool.species.length));
 		var species = pool.species[index];
@@ -43,7 +42,7 @@ var Utility = function(){
 		var child = children[c];
 		pool.addToSpecies(child);
 	}
-	
+
 	pool.generation += 1;
 	// writeToFile("Backup" + "_" + pool.generation + "_" + /*forms.gettext(saveLoadFile)*/ Config.filename);
 }
@@ -53,10 +52,10 @@ var clearJoypad = function(utility){
 		utility.controller[i] = False;
 	}
 }
-// 3
-/*var initializeRun = function(pool,utility){
+
+var initializeRun = function(pool,utility){
 	// savestate.load(Filename);
-	var rightmost = 0;
+	//var rightmost = 0;
 	pool.currentFrame = 0;
 	var timeout = Config.TimeoutConstant;
 	clearJoypad(utility);
@@ -65,7 +64,7 @@ var clearJoypad = function(utility){
 	var genome = species.genomes[pool.currentGenome];
 	generateNetwork(genome);
 	evaluateCurrent(pool);
-}*/
+}
 // 4
 var evaluateCurrent = function(pool){
 	var species = pool.species[pool.currentSpecies];
@@ -76,14 +75,14 @@ var evaluateCurrent = function(pool){
 	{
 	var inputs = getInputs();  // getInputs() must be modified, <Adapter>.getInputs() must be present where Adapter.js is the file responsible for getting inputs
 	var trueOutput = inputs[2];
-	inputs.pop();
-	var predOutput = evaluateNetwork(genome, genome.network, inputs);  // inputs is only used here
-	sqerror += Math.pow(predOutput-trueOutput, 2);	
+	inputs = inputs.slice(0,2);
+	var predOutput = evaluateNetwork(genome,genome.network, inputs);  // inputs is only used here
+	sqerror += Math.pow(predOutput-trueOutput,2);
 	if(Math.abs(predOutput - trueOutput) < 0.5)
 		misclassifications -= 1;
 	}
-	genome.fitness = 1/(sqerror<0.1 ?0.1:sqerror);
-	 
+	genome.fitness = 1/(sqerror<0.1?0.1:sqerror);
+
 	// Utility.controller = controller;
 
 	// if (controller["P1 Left"] && controller["P1 Right"]) {
@@ -103,11 +102,11 @@ var evaluateCurrent = function(pool){
 	// //joypad.set(controller);
 
 	console.log(
-		" Generaton: " + pool.generation +
-		" Species: " + pool.currentSpecies +
-		" Genome: " + pool.currentGenome +
-		" SquareError: " + sqerror +
-		" Misclassifications: " + misclassifications
+		" Generaton: "+pool.generation+
+		" Species: "+ pool.currentSpecies+
+		" Genome: "+ pool.currentGenome+
+		" SquareError: "+sqerror+
+		" Misclassifications: "+misclassifications
 	);
 	return misclassifications;
 }
@@ -131,23 +130,23 @@ var nextGenome = function(pool){
 var fitnessAlreadyMeasured = function(pool){
 	var species = pool.species[pool.currentSpecies];
 	var genome = species.genomes[pool.currentGenome];
-	
+
 	return genome.fitness != 0;
 }
 // 7
 var startUtility = function(pool){
-	// DataStorage.writeToFile("temp.pool");  
+	// DataStorage.writeToFile("temp.pool");
 
-
-	while (!pool.shouldStop) {
-
+var mycounter = 1;
+while (!pool.shouldStop && mycounter < 3) {
+		mycounter += 1;
 		var species = pool.species[pool.currentSpecies];
 		var genome = species.genomes[pool.currentGenome];
-	
+
 		/*if (forms.ischecked(showNetwork)) {
 			displayGenome(genome);
 		}*/
-	
+
 
 		// if (pool.currentFrame % 2 == 0) {
 		generateNetwork(genome);
@@ -170,27 +169,27 @@ var startUtility = function(pool){
 		// if (Config.onLevelEnd) {    // rightmost gives the last frame of the level
 		// 	timeout = Config.TimeoutConstant;
 		// }
-	
+
 		// timeout = timeout - 1;
-	
+
 		// var timeoutBonus = pool.currentFrame / 4;
 		// if (timeout + timeoutBonus <= 0) {
 		// 	var fitness = rightmost - pool.currentFrame / 2;  // rightmost gives the last frame of the level
-		// 	if (Config.onLevelEnd) {                
+		// 	if (Config.onLevelEnd) {
 		// 		fitness += 1000;
 		// 	}
 		// 	if (fitness == 0) {
 		// 		fitness = -1;
 		// 	}
 		// 	genome.fitness = fitness;
-		
+
 			if (genome.fitness > pool.maxFitness) {
 				pool.maxFitness = fitness;
 				//forms.settext(maxFitnessLabel, "Max Fitness: " .. Math.floor(pool.maxFitness));
 				// DataStorage.writeToFile("Backup" + "_" + pool.generation + "_" + /*forms.gettext(saveLoadFile)*/ Config.filename);
 			}
-		
-			// console.writeline("Generation: " + pool.generation + " Species: " + pool.currentSpecies + " Genome: " + 
+
+			// console.writeline("Generation: " + pool.generation + " Species: " + pool.currentSpecies + " Genome: " +
 			// 	pool.currentGenome + " Fitness: " + fitness);
 			pool.currentSpecies = 0;
 			pool.currentGenome = 0;
@@ -202,7 +201,7 @@ var startUtility = function(pool){
 
 		var measured = 0;
 		var total = 0;
-		
+
 		for (var key in pool.species) {
 			var species = pool.species[key];
 			for (var k in species.genomes) {
@@ -213,8 +212,7 @@ var startUtility = function(pool){
 				}
 			}
 		}
-		//pool.currentFrame += 1;
+		pool.currentFrame += 1;
 	}
 }
-
 startUtility(pool);

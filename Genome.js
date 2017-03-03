@@ -114,10 +114,10 @@ function randomNeuron(genes, nonInput){ 		//check this function
 	}
 	for (var i in genes){
 		if ((!nonInput) || (genes[i].into > Config.Inputs)){
-						
+
 			neurons[genes[i].into] = true}
 		if ((!nonInput) || (genes[i].out > Config.Inputs)){
-			
+
 			neurons[genes[i].out] = true;
 		}
 	}
@@ -131,9 +131,12 @@ function randomNeuron(genes, nonInput){ 		//check this function
 	var n = Math.floor(Math.random()*count);
 
 	for(var i in neurons) {
-		n = n-1;
-		if(n==0)
+		if(n==0) {
 			return i;
+			console.log("Random neuron returned "+ i);
+		}
+
+		n = n-1;
 	}
 
 	// console.log("randomNeuron");
@@ -148,7 +151,7 @@ function containsLink(genes, link){
 				return true;
 			}
 		}
-	
+
 }
 
 function pointMutate(genome){
@@ -163,7 +166,7 @@ function pointMutate(genome){
 			gene.weight = gene.weight + Math.random() * step*2 - step;
 		}else{
 			gene.weight = Math.random()*4-2;
-		}		
+		}
 	}
 }
 
@@ -175,7 +178,7 @@ function linkMutate(genome, forceBias){
 	var newLink = new Gene();
 	if (neuron1 <= Config.Inputs && neuron2 <= Config.Inputs){
 		//Both input nodes
-		return; 
+		return;
 	}
 	if (neuron2 <= Config.Inputs) {
 		// Swap output and input
@@ -190,7 +193,7 @@ function linkMutate(genome, forceBias){
 	if (forceBias) {
 		newLink.into = Config.Inputs;
 	}
-	
+
 	if (containsLink(genome.genes, newLink) ){
 		return;
 	}
@@ -207,8 +210,8 @@ function nodeMutate(genome){
 	if (genome.genes.length == 0){
 		return;
 	}
-	
-    
+
+
 	var gene = genome.genes[Math.floor(Math.random()*(genome.genes.length))];
 	console.log(genome.genes.length);
 	console.log(gene);
@@ -217,7 +220,7 @@ function nodeMutate(genome){
 	}
 	genome.maxneuron = genome.maxneuron + 1;
 
-	
+
 	gene.enabled = false;
 
 	var gene1 = copyGene(gene);
@@ -243,11 +246,11 @@ function enableDisableMutate(genome, enable){
 			candidates.push(gene);
 		}
 	}
-		
+
 	if (candidates.length == 0){
 		return;
 	}
-	
+
     gene = candidates[Math.floor(Math.random()*candidates.length)];
 	gene.enabled = !gene.enabled;
 }
