@@ -1,20 +1,21 @@
-var xor = [[0,0,0],[0,1,1],[1,0,1],[1,1,0]];
+var xor = [[0, 0, 0], [0, 1, 1], [1, 0, 1], [1, 1, 0]];
 var xorindex = -1;
-// addfa
 var getInputs = function(){
-	xorindex = (xorindex + 1)%4
+	xorindex = (xorindex + 1) % 4
 	return xor[xorindex];
 }
 
+// error on purpose
+
 var Utility = function(){
 	return {
-	controller: {a:False,left:False,right:False,up:False,Down:False}, 	
+	controller: {A: false, Left: false, Right: false, Up: false, Down: false}, 	
 	}
 	
 }
 // 1
  var newGeneration = function(pool){
-	cullSpecies(false,pool); // Cull the bottom half of each species
+	cullSpecies(false, pool); // Cull the bottom half of each species
 	rankGlobally(pool);
 	removeStaleSpecies(pool);
 	rankGlobally(pool);
@@ -28,11 +29,11 @@ var Utility = function(){
 	for (var s in pool.species){
 		var species = pool.species[s];
 		var breed = Math.floor(species.averageFitness / sum * Config.Population) - 1;
-		for (var i = 1; i <= breed; i++) {
+		for (var i = 0; i < breed; i++) {
 			children.push(breedChild(species));
 		}
 	}
-	cullSpecies(true,pool) // Cull all but the top member of each species
+	cullSpecies(true, pool) // Cull all but the top member of each species
 	while (children.length + pool.species.length < Config.Population) {
 		var index = Math.floor((Math.random() * pool.species.length) + 1);
 		var species = pool.species[index];
@@ -52,10 +53,10 @@ var clearJoypad = function(utility){
 		utility.controller[i] = False;
 	}
 }
-
-var initializeRun = function(pool,utility){
+// 3
+/*var initializeRun = function(pool,utility){
 	// savestate.load(Filename);
-	//var rightmost = 0;
+	var rightmost = 0;
 	pool.currentFrame = 0;
 	var timeout = Config.TimeoutConstant;
 	clearJoypad(utility);
@@ -64,7 +65,7 @@ var initializeRun = function(pool,utility){
 	var genome = species.genomes[pool.currentGenome];
 	generateNetwork(genome);
 	evaluateCurrent(pool);
-}
+}*/
 // 4
 var evaluateCurrent = function(pool){
 	var species = pool.species[pool.currentSpecies];
@@ -76,12 +77,12 @@ var evaluateCurrent = function(pool){
 	var inputs = getInputs();  // getInputs() must be modified, <Adapter>.getInputs() must be present where Adapter.js is the file responsible for getting inputs
 	var trueOutput = inputs[2];
 	inputs.pop();
-	var predOutput = evaluateNetwork(genome,network, inputs);  // inputs is only used here
-	sqerror += Math.pow(predOutput-trueOutput,2);	
+	var predOutput = evaluateNetwork(genome, genome.network, inputs);  // inputs is only used here
+	sqerror += Math.pow(predOutput-trueOutput, 2);	
 	if(Math.abs(predOutput - trueOutput) < 0.5)
 		misclassifications -= 1;
 	}
-	genome.fitness = 1/(sqerror<0.1?0.1:sqerror);
+	genome.fitness = 1/(sqerror<0.1 ?0.1:sqerror);
 	 
 	// Utility.controller = controller;
 
@@ -102,11 +103,11 @@ var evaluateCurrent = function(pool){
 	// //joypad.set(controller);
 
 	console.log(
-		" Generaton: "+pool.generation+
-		" Species: "+ pool.currentSpecies+
-		" Genome: "+ pool.currentGenome+
-		" SquareError: "+sqerror+
-		" Misclassifications: "+misclassifications
+		" Generaton: " + pool.generation +
+		" Species: " + pool.currentSpecies +
+		" Genome: " + pool.currentGenome +
+		" SquareError: " + sqerror +
+		" Misclassifications: " + misclassifications
 	);
 	return misclassifications;
 }
@@ -212,7 +213,8 @@ var startUtility = function(pool){
 				}
 			}
 		}
-		pool.currentFrame += 1;
+		//pool.currentFrame += 1;
 	}
 }
+
 startUtility(pool);
