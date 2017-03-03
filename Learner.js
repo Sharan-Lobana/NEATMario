@@ -53,9 +53,9 @@ var clearJoypad = function(utility){
 	}
 }
 
-var initializeRun = function(pool,utility){
+/*var initializeRun = function(pool,utility){
 	// savestate.load(Filename);
-	//var rightmost = 0;
+	var rightmost = 0;
 	pool.currentFrame = 0;
 	var timeout = Config.TimeoutConstant;
 	clearJoypad(utility);
@@ -64,7 +64,7 @@ var initializeRun = function(pool,utility){
 	var genome = species.genomes[pool.currentGenome];
 	generateNetwork(genome);
 	evaluateCurrent(pool);
-}
+}*/
 // 4
 var evaluateCurrent = function(pool){
 	var species = pool.species[pool.currentSpecies];
@@ -102,11 +102,11 @@ var evaluateCurrent = function(pool){
 	// //joypad.set(controller);
 
 	console.log(
-		" Generaton: "+pool.generation+
-		" Species: "+ pool.currentSpecies+
-		" Genome: "+ pool.currentGenome+
-		" SquareError: "+sqerror+
-		" Misclassifications: "+misclassifications
+		"\n\n Generaton: "+pool.generation+
+		"\n\n Species: "+ pool.currentSpecies+
+		"\n\n Genome: "+ pool.currentGenome+
+		"\n\n SquareError: "+sqerror+
+		"\n\n Misclassifications: "+misclassifications
 	);
 	return misclassifications;
 }
@@ -153,7 +153,8 @@ while (!pool.shouldStop && mycounter < 3) {
 		var misclassifications = evaluateCurrent(pool);
 		// }
 		if(!misclassifications) {
-			console.log(genome);
+			// console.log(genome);
+			console.log("\n\n\nTHE POOL SHOULD STOP\n\n\n");
 			pool.shouldStop = !0;
 		}
 

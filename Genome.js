@@ -51,11 +51,23 @@ function copyGenome(genome){
 
 function basicGenome(){
 	var genome = new Genome();
-
-	var innovation = 1;
 	genome.maxneuron = Config.Inputs;
+
+	//Populate the genes list of genome
+	//Each input is connected to each output
+	for(var i = 0; i <= Config.Inputs; i++) {
+		for(var j = 0; j < Config.Outputs; j++) {
+			var gene = new Gene();
+			gene.into = i;
+			gene.out = Config.MaxNodes + j;
+			gene.weight = Math.random()*4-2;
+			gene.innovation = i*Config.Outputs + j;
+			console.log("Current innovation number "+gene.innovation);
+			genome.genes.push(gene);
+		}
+	}
 	mutate(genome);
-	console.log("basicGenome");
+	// console.log("BasicGenome called");
 	return genome;
 }
 
@@ -132,7 +144,7 @@ function randomNeuron(genes, nonInput){ 		//check this function
 
 	for(var i in neurons) {
 		if(n==0) {
-			return i;
+			return parseInt(i);
 			console.log("Random neuron returned "+ i);
 		}
 
@@ -151,9 +163,9 @@ function containsLink(genes, link){
 				return true;
 			}
 		}
-
+	return false;
 }
-
+// mutates the weight of genes
 function pointMutate(genome){
 	var step = genome.mutationRates['step'];
 	var gene={};
@@ -170,6 +182,8 @@ function pointMutate(genome){
 	}
 }
 
+//Create a new connection between two random nodes selected out of which one can't be any input node 
+//TODO: make sure linkMutate doesn't introduce a cycle
 function linkMutate(genome, forceBias){
 	var neuron1 = randomNeuron(genome.genes, false);
 	var neuron2 = randomNeuron(genome.genes, true);
@@ -186,6 +200,8 @@ function linkMutate(genome, forceBias){
 		neuron1 = neuron2;
 		neuron2 = temp;
 	}
+	if(neuron1 == neuron2)
+		return;
 	if(neuron1 && neuron2){
 	newLink.into = neuron1;
 	newLink.out = neuron2;
@@ -199,12 +215,16 @@ function linkMutate(genome, forceBias){
 	}
 
 	newLink.innovation = newInnovation(pool);
+	console.log("\n\n\nNew innovation called: "+newLink.innovation);
 	newLink.weight = Math.random()*4-2;
 
-	console.log(genome.genes);
+	console.log("Genes List length :"+genome.genes.length);
 	genome.genes.push(newLink);
+	console.log("Genes List length :"+genome.genes.length);
+	console.log("\n\nNew link created with in: "+newLink.into+" and out: "+newLink.out);
 }
 
+// creates a new node in between two connected nodes
 function nodeMutate(genome){
 
 	if (genome.genes.length == 0){
@@ -213,35 +233,41 @@ function nodeMutate(genome){
 
 
 	var gene = genome.genes[Math.floor(Math.random()*(genome.genes.length))];
-	console.log(genome.genes.length);
+	console.log("\n\nNodeMuate called: Gene list length: "+genome.genes.length);
 	console.log(gene);
 	if (!gene.enabled ){
+		console.log("\n\nSelected gene wasn't enabled. So returned.");
 		return;
 	}
 	genome.maxneuron = genome.maxneuron + 1;
 
-
+	// Disabling existing gene between two nodes
 	gene.enabled = false;
-
+	// Creating a link (gene) between input node and new node with weight 1.0
 	var gene1 = copyGene(gene);
 	gene1.out = genome.maxneuron;
 	gene1.weight = 1.0;
 	gene1.innovation = newInnovation(pool);
+	console.log("\n\n\nNew innovation called for nodemutate: "+gene1.innovation);
+
 	gene1.enabled = true;
 	genome.genes.push(gene1);
-
+	// Creating a link (gene) between new node and output node with weight = weight of original gene
 	var gene2 = copyGene(gene);
 	gene2.into = genome.maxneuron;
 	gene2.innovation = newInnovation(pool);
+	console.log("\n\n\nNew innovation called for nodemutate second link: "+gene2.innovation);
+
 	gene2.enabled = true;
 	genome.genes.push(gene2);
 }
 
+// if enable = true, then enables disabled genes 
 function enableDisableMutate(genome, enable){
 	var candidates = [];
 	var gene={};
-	for (var key in genome.genes){
-		 gene = genome.genes[key];
+	for (var i in genome.genes){
+		 gene = genome.genes[i];
 		if(gene.enabled == !enable){
 			candidates.push(gene);
 		}
@@ -253,6 +279,15 @@ function enableDisableMutate(genome, enable){
 
     gene = candidates[Math.floor(Math.random()*candidates.length)];
 	gene.enabled = !gene.enabled;
+	// if(gene.enabled && !genome.network.neurons[gene.out]) {
+	// 	var newNeuron = new Neuron();
+	// 	newNeuron.incoming.push(gene);
+	// 	genome.network.neurons[gene.out] = newNeuron;
+	// }
+	// if(gene.enabled && !genome.network.neurons[gene.into]) {
+	// 	genome.network.neurons[gene.into] = new Neuron();
+	// }
+
 }
 
 function mutate(genome){
@@ -266,49 +301,34 @@ function mutate(genome){
 	}
 
 	if (Math.random() < genome.mutationRates['connections'] ){
-		pointMutate(genome);
+		//Change the weight of each gene of genome
+		//with probability PertubChance and intialize it to new value
+		//with probability 1-PertubChance
+		pointMutate(genome);	
 	}
 
 	var p = genome.mutationRates['link'];
 
-	while(p > 0){
-		if (Math.random() < p ){
-			linkMutate(genome, false);
-		}
-		p = p - 1;
-	}
+	if(p >= 1.0 || Math.random() < p)
+		linkMutate(genome, false);
+	
 
 	p = genome.mutationRates['bias'];
-	while(p > 0 ){
-		if (Math.random() < p) {
-			linkMutate(genome, true);
-		}
-		p = p - 1;
-	}
+	if(p >= 1.0 || Math.random() < p)
+		linkMutate(genome, true);
 
 	p = genome.mutationRates['node'];
-	while (p > 0 ){
-		if (Math.random()<p) {
-			nodeMutate(genome);
-		}
-		p = p - 1;
-	}
+	if(p >= 1.0 || Math.random() < p)
+		nodeMutate(genome);
 
 	p = genome.mutationRates['enable'];
-	while (p > 0 ){
-		if (Math.random() < p ){
-			enableDisableMutate(genome, true);
-		}
-		p = p - 1;
-	}
+	if(p >= 1.0 || Math.random() < p)
+		enableDisableMutate(genome, true);
+
 
 	p = genome.mutationRates['disable'];
-	while (p > 0){
-		if (Math.random() < p ){
-			enableDisableMutate(genome, false);
-		}
-		p = p - 1;
-	}
+	if(p >= 1.0 || Math.random() < p)
+		enableDisableMutate(genome, false);
 }
 
 // module.exports = Genome;
