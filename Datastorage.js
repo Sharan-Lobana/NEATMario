@@ -26,7 +26,7 @@ var datastorage = {
     	       	var genome = species.genomes[k];
     	       	jsongenomes.genome = genome;
                 jsonGenomes.fitness = genome.fitness;
-                jsonGenomes.maxneuron = genome.maxneuron;
+                jsonGenomes.nextNeuronID = genome.nextNeuronID;
 
             for(var l in genome.mutationRates){
     			jsongenomes.mutationRates = l + genome.mutationRates[l];
@@ -69,7 +69,7 @@ var datastorage = {
         
         for(var c=0; c< jsonGenomes.genomeLength;c++){
         	var genome = new genome();
-        	genome.maxneuron = jsonGenomes.maxneuron;
+        	genome.nextNeuronID = jsonGenomes.nextNeuronID;
         	genome.fitness = jsonGenomes.fitness;
         	genome.genes.length = jsonGenomes.geneslength;
             for(var d =0; d< jsonGenomes.geneslength;d++){

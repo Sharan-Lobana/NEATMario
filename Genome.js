@@ -8,7 +8,7 @@ var Genome = function(){
 	var fitness = 0;
 	var adjustedFitness = 0;
 	var network = {};
-	var maxneuron = 0;
+	var nextNeuronID = 0;
 	var globalRank = 0;
 	var mutationRates = {};
 	mutationRates['connections'] = Config.MutateConnectionsChance;
@@ -24,7 +24,7 @@ var Genome = function(){
 		'fitness':fitness,
 		'adjustedFitness':adjustedFitness,
 		'network':network,
-		'maxneuron':maxneuron,
+		'nextNeuronID':nextNeuronID,
 		'globalRank':globalRank,
 		'mutationRates':mutationRates,
 	}
@@ -38,7 +38,7 @@ function copyGenome(genome){
 		genome2.genes.push(copyGene(genome.genes[g]));
 	}
 
-	genome2.maxneuron = genome.maxneuron;
+	genome2.nextNeuronID = genome.nextNeuronID;
 	genome2.mutationRates['connections'] = genome.mutationRates['connections'];
 	genome2.mutationRates['link'] = genome.mutationRates['link'];
 	genome2.mutationRates['bias'] = genome.mutationRates['bias'];
@@ -52,7 +52,7 @@ function copyGenome(genome){
 function basicGenome(){
 	var genome = new Genome();
 
-	genome.maxneuron = Config.Inputs;
+	genome.nextNeuronID = Config.Inputs;
 
 	//Populate the genes list of genome
 	//Each input is connected to each output
@@ -106,7 +106,7 @@ function crossover(g1, g2){
 		}
 	}
 
-	child.maxneuron = Math.max(g1.maxneuron,g2.maxneuron);
+	child.nextNeuronID = Math.max(g1.nextNeuronID,g2.nextNeuronID);
 
 	for (mutation in g1.mutationRates){
 		child.mutationRates[mutation] = g1.mutationRates[mutation];
@@ -221,15 +221,36 @@ function linkMutate(genome, forceBias){
 		return;
 	}
 
-	newLink.innovation = newInnovation(pool);
+	var flag = false;
+	if(pool.LinkMutationList){
+		for(var i in pool.LinkMutationList){
+			var linkMutation = pool.LinkMutationList[i];
+			if(newLink.into == linkMutation['newLink_into'] && newLink.out == linkMutation['newLink_out']){
+				newLink.innovation = linkMutation['newLink_innovation'];
+				flag = true;
+				break;
+			}
+		}
+	}
+	if(!flag){
+		newLink.innovation = newInnovation(pool);
+		console.log("\n\n\nNew innovation called: "+newLink.innovation);
+	}
 
-	console.log("\n\n\nNew innovation called: "+newLink.innovation);
+
 	newLink.weight = Math.random()*4-2;
-
 	console.log("Genes List length :"+genome.genes.length);
 	genome.genes.push(newLink);
 	console.log("Genes List length :"+genome.genes.length);
 	console.log("\n\nNew link created with in: "+newLink.into+" and out: "+newLink.out);
+
+	if(!flag){
+		var linkMutation = {};
+		linkMutation['newLink_into'] = newLink.into;
+		linkMutation['newLink_out'] = newLink.out;
+		linkMutation['newLink_innovation'] = newLink.innovation;
+		pool.LinkMutationList.push(linkMutation);
+	}
 }
 
 // creates a new node in between two connected nodes
@@ -243,36 +264,69 @@ function nodeMutate(genome){
 	var gene = genome.genes[Math.floor(Math.random()*(genome.genes.length))];
 
 	console.log("\n\nNodeMuate called: Gene list length: "+genome.genes.length);
-	console.log(gene);
+	//console.log(gene);
 	if (!gene.enabled ){
 		console.log("\n\nSelected gene wasn't enabled. So returned.");
 
 		return;
 	}
-	genome.maxneuron = genome.maxneuron + 1;
 
 
 	// Disabling existing gene between two nodes
 	gene.enabled = false;
-	// Creating a link (gene) between input node and new node with weight 1.0
+
 
 	var gene1 = copyGene(gene);
-	gene1.out = genome.maxneuron;
+	var gene2 = copyGene(gene);
+	var flag = false;
+	
+	if(pool.NodeMutationList){
+		for(var i in pool.NodeMutationList){
+			var nodeMutation = pool.NodeMutationList[i];
+			if(gene.into == nodeMutation['gene_into'] && gene.out == nodeMutation['gene_out']){
+				genome.nextNeuronID = nodeMutation['nextneuronID'];
+				gene1.innovation = nodeMutation['gene1_innovation'];
+				gene2.innovation = nodeMutation['gene2_innovation'];
+				flag = true;
+				break;
+			}
+		}
+	}
+	if(!flag){
+		genome.nextNeuronID = genome.nextNeuronID + 1;
+		gene1.innovation = newInnovation(pool);
+		console.log("\n\n\nNew innovation called for nodemutate: "+gene1.innovation);
+		gene2.innovation = newInnovation(pool);
+		console.log("\n\n\nNew innovation called for nodemutate second link: "+gene2.innovation);
+	}
+	
+	// Creating a link (gene) between input node and new node with weight 1.0
+	//var gene1 = copyGene(gene);
+	gene1.out = genome.nextNeuronID;
 	gene1.weight = 1.0;
-	gene1.innovation = newInnovation(pool);
 
-	console.log("\n\n\nNew innovation called for nodemutate: "+gene1.innovation);
+	
+	
 
 	gene1.enabled = true;
 	genome.genes.push(gene1);
 	// Creating a link (gene) between new node and output node with weight = weight of original gene
-	var gene2 = copyGene(gene);
-	gene2.into = genome.maxneuron;
-	gene2.innovation = newInnovation(pool);
-	console.log("\n\n\nNew innovation called for nodemutate second link: "+gene2.innovation);
-
+	//var gene2 = copyGene(gene);
+	gene2.into = genome.nextNeuronID;
+	
+	
 	gene2.enabled = true;
 	genome.genes.push(gene2);
+
+	if(!flag){
+		var nodeMutation = {};
+		nodeMutation['gene_into'] = gene.into;
+		nodeMutation['gene_out'] = gene.out;
+		nodeMutation['nextneuronID'] = genome.nextNeuronID;
+		nodeMutation['gene1_innovation'] = gene1.innovation;
+		nodeMutation['gene2_innovation'] = gene2.innovation;
+		pool.NodeMutationList.push(nodeMutation);
+	}
 }
 
 
