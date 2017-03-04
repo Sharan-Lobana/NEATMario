@@ -72,11 +72,13 @@ var Network = function() {
 
 var generateNetwork = function(genome) {
 	var network = new Network();
+
 	// Adding input layer and bias Neuron
 	for(var i = 0; i <= Config.Inputs; i++)
 		network.neurons.push(new Neuron());
 
 	// Adding output layer
+
 	for(var i = 0; i < network.Outputs; i++)
 		network.neurons[network.maxNumNeurons + i] = new Neuron();
 
@@ -85,12 +87,14 @@ var generateNetwork = function(genome) {
 	for(var i = 0; i < genome.genes.length; i++) {
 		var gene = genome.genes[i];
 		if(gene.enabled) {
+
 			// If gene is enabled but there is no output neuron
 			if(!network.neurons[gene.out])
 				network.neurons[gene.out] = new Neuron();
 			// Incoming of the neuron is set to this gene
 			network.neurons[gene.out].incoming.push(gene);
 			// If gene is enable but there is no input neuron
+
 			if(!network.neurons[gene.into])
 				network.neurons[gene.into] = new Neuron();
 		}
@@ -104,7 +108,9 @@ var generateNetwork = function(genome) {
 var evaluateNetwork = function(genome,network,inputs) {
 	inputs.push(1);	//Push the bias
 	if(inputs.length != network.Inputs) {
+
 		console.log("\n\n\nIncorrect number of inputs for neural network\n\n\n");
+
 		for(o = [],i = 0; i < network.Outputs; i++) o.push[0];
 		return o;	//return
 	}

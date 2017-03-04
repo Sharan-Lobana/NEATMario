@@ -8,7 +8,9 @@ var getInputs = function(){
 
 var Utility = function(){
 	return {
+
 	controller: {A: false, Left: false, Right: false, Up: false, Down: false},
+
 	}
 
 }
@@ -34,7 +36,9 @@ var Utility = function(){
 	}
 	cullSpecies(true,pool) // Cull all but the top member of each species
 	while (children.length + pool.species.length < Config.Population) {
+
 		var index = Math.floor((Math.random() * pool.species.length));
+
 		var species = pool.species[index];
 		children.push(breedChild(species));
 	}
@@ -53,9 +57,11 @@ var clearJoypad = function(utility){
 	}
 }
 
+
 /*var initializeRun = function(pool,utility){
 	// savestate.load(Filename);
 	var rightmost = 0;
+
 	pool.currentFrame = 0;
 	var timeout = Config.TimeoutConstant;
 	clearJoypad(utility);
@@ -64,7 +70,9 @@ var clearJoypad = function(utility){
 	var genome = species.genomes[pool.currentGenome];
 	generateNetwork(genome);
 	evaluateCurrent(pool);
+
 }*/
+
 // 4
 var evaluateCurrent = function(pool){
 	var species = pool.species[pool.currentSpecies];
@@ -102,11 +110,13 @@ var evaluateCurrent = function(pool){
 	// //joypad.set(controller);
 
 	console.log(
+
 		"\n\n Generaton: "+pool.generation+
 		"\n\n Species: "+ pool.currentSpecies+
 		"\n\n Genome: "+ pool.currentGenome+
 		"\n\n SquareError: "+sqerror+
 		"\n\n Misclassifications: "+misclassifications
+
 	);
 	return misclassifications;
 }
@@ -153,8 +163,10 @@ while (!pool.shouldStop && mycounter < 3) {
 		var misclassifications = evaluateCurrent(pool);
 		// }
 		if(!misclassifications) {
+
 			// console.log(genome);
 			console.log("\n\n\nTHE POOL SHOULD STOP\n\n\n");
+
 			pool.shouldStop = !0;
 		}
 

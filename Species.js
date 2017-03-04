@@ -87,7 +87,9 @@ function breedChild(species){
 }
 
 function removeStaleSpecies(pool){
+
     var survived = [];
+
 
     for (s =0;s<pool.species.length;s++ ){
         var species = pool.species[s];
@@ -115,7 +117,9 @@ function removeStaleSpecies(pool){
 }
 
 function removeWeakSpecies(pool){
+
     var survived = [];
+
 
     var sum = totalAverageFitness();
 
@@ -145,9 +149,11 @@ function addToSpecies(child,pool){
     }
 
     if (!foundSpecies ){
+
         console.log("New species created.");
         var childSpecies = new Species();
         // console.log(childSpecies.genomes);
+
         childSpecies.genomes.push(child);
         pool.species.push(childSpecies);
     }
@@ -160,7 +166,9 @@ function sameSpecies(genome1, genome2){
     var dw = Config.DeltaWeights*weights(genome1.genes, genome2.genes);
     return dd + dw < Config.DeltaThreshold;
 
+
     // console.log("sameSpecies");
+
 }
 
 // module.exports = Species;
