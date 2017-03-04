@@ -23,6 +23,7 @@ function copyGene(gene){
 	gene2.weight = gene.weight;
 	gene2.enabled = gene.enabled;
 	gene2.innovation = gene.innovation;
+	console.log("\ncopyGene is executed");
 	return gene2;
 }
 
@@ -59,7 +60,7 @@ function disjoint(genes1, genes2){
 	}
 
 	var n = Math.max(genes1.length,genes2.length);
-
+	console.log("\ndisjoint is executed");
 	return disjointGenes / n;
 }
 
@@ -88,7 +89,7 @@ function weights(genes1, genes2){
 			coincident = coincident + 1;
 		}
 	}
-
+	console.log("\nweights is executed");
 	return sum / coincident;
 }
 

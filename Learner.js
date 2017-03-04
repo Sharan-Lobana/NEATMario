@@ -2,7 +2,8 @@ var xor = [[0,0,0],[0,1,1],[1,0,1],[1,1,0]];
 var xorindex = -1;
 // addfa
 var getInputs = function(){
-	xorindex = (xorindex + 1)%4
+	xorindex = (xorindex + 1)%4;
+	console.log("\ngetInputs is executed");
 	return xor[xorindex];
 }
 
@@ -45,6 +46,7 @@ var Utility = function(){
 
 	pool.generation += 1;
 	// writeToFile("Backup" + "_" + pool.generation + "_" + /*forms.gettext(saveLoadFile)*/ Config.filename);
+	console.log("\nnewGeneration is executed");
 }
 // 2
 var clearJoypad = function(utility){
@@ -102,12 +104,13 @@ var evaluateCurrent = function(pool){
 	// //joypad.set(controller);
 
 	console.log(
-		"\n\n Generaton: "+pool.generation+
+		"\n\n Generation: "+pool.generation+
 		"\n\n Species: "+ pool.currentSpecies+
 		"\n\n Genome: "+ pool.currentGenome+
 		"\n\n SquareError: "+sqerror+
 		"\n\n Misclassifications: "+misclassifications
 	);
+	console.log("\nevaluateCurrent is executed");
 	return misclassifications;
 }
 

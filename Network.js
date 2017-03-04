@@ -97,6 +97,7 @@ var generateNetwork = function(genome) {
 	}
 
 	genome.network = network;
+	console.log("\ngenerateNetwork is executed");
 }
 
 //inputs is list of inputs
@@ -128,7 +129,7 @@ var evaluateNetwork = function(genome,network,inputs) {
 	  }
 
 	var sum = 0;
-  var ind;
+    var ind;
   
 	//Evaluate the hidden and output layer neurons
 	for(var i in sorted) {
@@ -153,5 +154,6 @@ var evaluateNetwork = function(genome,network,inputs) {
 	for(var i = network.maxNumNeurons; i < network.maxNumNeurons + network.Outputs; i++) {
 			o.push(network.neurons[i].value)
 		}
+	console.log("\nevaluateNetwork is executed");
 	return o;
 }
