@@ -13,7 +13,9 @@ var Pool = function(){
 	var currentFrame = 0;
 	var maxFitness = 0;
 	var shouldStop = false;
-	var innovationsSoFar = [];	//TODO: store the innovations;
+	//var innovationsSoFar = [];	//TODO: store the innovations;
+	var NodeMutationList = [];
+	var LinkMutationList = [];
 
 	return {'species':species,
 			'generation':generation,
@@ -22,7 +24,9 @@ var Pool = function(){
 			'currentGenome':currentGenome,
 			'currentFrame':currentFrame,
 			'maxFitness':maxFitness,
-			'shouldStop':shouldStop
+			'shouldStop':shouldStop,
+			'NodeMutationList':NodeMutationList,
+			'LinkMutationList':LinkMutationList	
 		}
 
 };
