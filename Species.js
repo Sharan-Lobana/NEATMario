@@ -21,8 +21,6 @@ var Species = function(){
 };
 
 function calculateAverageFitness(species){
-      console.log("calculateAverageFitness");
-
       var total = 0 ;
         for (g =0 ;g<species.genomes.length;g++){
             var genome = species.genomes[g];
@@ -30,19 +28,19 @@ function calculateAverageFitness(species){
         }
 
         species.averageFitness = total / species.genome.length;
+        console.log("\ncalculateAverageFitness is executed");
         return averageFitness;
 }
 
 
 function totalAverageFitness(pool){
-    console.log("totalAverageFitness");
        var total = 0;
         for(s=0; s<pool.species.length;s++){
             var species = pool.species[s];
             total = total + species.averageFitness;
         }
+        console.log("\ntotalAverageFitness is executed");
         return total;
-
 }
 
 function cullSpecies(cutToOne,pool){
@@ -64,7 +62,7 @@ function cullSpecies(cutToOne,pool){
             species.genomes.pop();
         }
     }
-    console.log("cullSpecies");
+    console.log("\ncullSpecies is executed");
 }
 
 
@@ -80,7 +78,7 @@ function breedChild(species){
     }
 
     mutate(child);                  //check :
-    console.log("breedChild");
+    console.log("\nbreedChild is executed");
     return child;
 
 
@@ -111,7 +109,7 @@ function removeStaleSpecies(pool){
     }
 
     pool.species = survived;
-    console.log("removeWeakSpecies");
+    console.log("\nremoveWeakSpecies is executed");
 
 
 }
@@ -132,7 +130,7 @@ function removeWeakSpecies(pool){
     }
 
     pool.species = survived;
-    console.log("removeWeakSpecies");
+    console.log("\nremoveWeakSpecies is executed");
 
 }
 
@@ -157,18 +155,16 @@ function addToSpecies(child,pool){
         childSpecies.genomes.push(child);
         pool.species.push(childSpecies);
     }
-    console.log("addToSpecies");
+    console.log("\naddToSpecies is executed");
 
 }
 
 function sameSpecies(genome1, genome2){
     var dd = Config.DeltaDisjoint*disjoint(genome1.genes, genome2.genes);
     var dw = Config.DeltaWeights*weights(genome1.genes, genome2.genes);
+    console.log("\nsameSpecies is executed");
     return dd + dw < Config.DeltaThreshold;
-
-
     // console.log("sameSpecies");
-
 }
 
 // module.exports = Species;

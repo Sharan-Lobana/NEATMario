@@ -15,7 +15,7 @@ var Pool = function(){
 	var currentFrame = 0;
 	var maxFitness = 0;
 	var shouldStop = false;
-
+	var nextNeuronID = 0;
 	//var innovationsSoFar = [];	//TODO: store the innovations;
 	var NodeMutationList = [];
 	var LinkMutationList = [];
@@ -30,6 +30,7 @@ var Pool = function(){
 			'currentFrame':currentFrame,
 			'maxFitness':maxFitness,
 			'shouldStop':shouldStop,
+			'nextNeuronID':nextNeuronID,
 			'NodeMutationList':NodeMutationList,
 			'LinkMutationList':LinkMutationList	
 		}
@@ -43,7 +44,7 @@ function initializePool(){
 		var basic = basicGenome();	//Comeback
 		addToSpecies(basic,pool);
 	}
-
+	console.log("\ninitializePool is executed");
 	return pool;
 }
 
@@ -51,6 +52,7 @@ function initializePool(){
 //innovation is the next available innovation number
 function newInnovation(pool){
 	pool.innovation = pool.innovation + 1;
+	console.log("\nnewInnovation is executed");
 	return pool.innovation-1;	//innovation - 1 is available
 }
 
@@ -73,10 +75,8 @@ function rankGlobally(pool){
 
 	for(var g =0 ; g<global1.length ; g++ ){
 		global1[g].globalRank = g;
-
-	}
-
-
+	}	
+	console.log("\nrankGlobally is executed");
 }
 
 // module.exports = Pool;
