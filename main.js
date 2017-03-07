@@ -1,24 +1,31 @@
 var http = require("http");
+// var fs = require("fs");
+// var access = fs.createWriteStream( '../NEATMario/node.access.log', { flags: 'a' })
+//       , error = fs.createWriteStream('../NEATMario/node.error.log', { flags: 'a' });
+//
+// // redirect stdout / stderr
+// process.stdout.pipe(access);
+// process.stderr.pipe(error);
+
+// http.createServer(function (request, response) {
+//    response.writeHead(200, {'Content-Type': 'text/plain'});
+//    response.end('Hello World\n');
+// }).listen(8002);
+// console.log('Server running at http://127.0.0.1:8002/');
 
 
-http.createServer(function (request, response) {
-   // Send the HTTP header 
-   // HTTP Status: 200 : OK
-   // Content Type: text/plain
-   response.writeHead(200, {'Content-Type': 'text/plain'});
-   
-   // Send the response body as "Hello World"
-   response.end('Hello World\n');
-}).listen(8002);
+var winston = require('winston');
 
-// Console will print the message
-console.log('Server running at http://127.0.0.1:8002/');
+winston.log('info', 'Hello distributed log files!');
+winston.info('Hello again distributed logs');
 
-
-
+winston.level = 'debug';
+console.warn( 'Now my debug messages are written to console!');
+winston.add(winston.transports.File, { filename: 'node.access.log' });
+winston.remove(winston.transports.Console);
 
 var Config={
-	
+
 
 //the global variables defines here
 BoxRadius :6,
@@ -35,11 +42,11 @@ ButtonNames : [
 		"Right",
 	],
 
-Population :50,
+Population :500,
 DeltaDisjoint :2.0,
 DeltaWeights :0.4,
 DeltaThreshold :1.0,
-StaleSpecies :15,
+StaleSpecies :20,
 MutateConnectionsChance :0.25,
 PerturbChance :0.90,
 CrossoverChance :0.75,
@@ -52,7 +59,7 @@ EnableMutationChance :0.2,
 TimeoutConstant :20,
 MaxNodes :1000
 
-	
+
 };
 
 Config.sigmoid = function(x){
@@ -84,7 +91,6 @@ function copyGene(gene){
 	gene2.weight = gene.weight;
 	gene2.enabled = gene.enabled;
 	gene2.innovation = gene.innovation;
-	// console.log("\ncopyGene is executed");
 	return gene2;
 }
 
@@ -121,7 +127,6 @@ function disjoint(genes1, genes2){
 	}
 
 	var n = Math.max(genes1.length,genes2.length);
-	// console.log("\ndisjoint is executed");
 	return disjointGenes / n;
 }
 
@@ -150,7 +155,6 @@ function weights(genes1, genes2){
 			coincident = coincident + 1;
 		}
 	}
-	// console.log("\nweights is executed");
 	return sum / coincident;
 }
 
@@ -190,14 +194,12 @@ function copyGenome(genome){
 		genome2.genes.push(copyGene(genome.genes[g]));
 	}
 
-	//genome2.nextNeuronID = genome.nextNeuronID;
 	genome2.mutationRates['connections'] = genome.mutationRates['connections'];
 	genome2.mutationRates['link'] = genome.mutationRates['link'];
 	genome2.mutationRates['bias'] = genome.mutationRates['bias'];
 	genome2.mutationRates['node'] = genome.mutationRates['node'];
 	genome2.mutationRates['enable'] = genome.mutationRates['enable'];
 	genome2.mutationRates['disable'] = genome.mutationRates['disable'];
-	// console.log("\ncopyGenome is executed");
 	return genome2;
 }
 
@@ -214,13 +216,11 @@ function basicGenome(){
 			gene.out = Config.MaxNodes + j;
 			gene.weight = Math.random()*4-2;
 			gene.innovation = i*Config.Outputs + j;
-			// console.log("basicGenome: Current innovation number "+gene.innovation);
 			genome.genes.push(gene);
 		}
 	}
 
 	mutate(genome);
-	// console.log("\nBasicGenome is executed");
 	return genome;
 }
 
@@ -263,7 +263,7 @@ function crossover(g1, g2){
 	for (mutation in g1.mutationRates){
 		child.mutationRates[mutation] = g1.mutationRates[mutation];
 	}
-	// console.log("\ncrossover is executed");
+
 	return child;
 }
 function randomNeuron(genes, nonInput){ 		//check this function
@@ -299,13 +299,10 @@ function randomNeuron(genes, nonInput){ 		//check this function
 		if(n==0) {
 
 			return parseInt(i);
-			// console.log("Random neuron returned "+ i);
 		}
 
 		n = n-1;
 	}
-
-	// console.log("randomNeuron");
 }
 
 
@@ -314,11 +311,9 @@ function containsLink(genes, link){
 	for (i=0;i<genes.length;i++){
 	  		gene = genes[i];
 			if ((gene.into == link.into) && (gene.out == link.out)){
-				// console.log("\ncontainsLink is executed: Contains link");
 				return true;
 			}
 		}
-		// console.log("\ncontainsLink is executed: Does not contain link");
 	return false;
 }
 // mutates the weight of genes
@@ -336,7 +331,6 @@ function pointMutate(genome){
 			gene.weight = Math.random()*4-2;
 		}
 	}
-	// console.log("\npointMutate is executed");
 }
 
 
@@ -369,7 +363,6 @@ function linkMutate(genome, forceBias){
 	if (forceBias) {
 		newLink.into = Config.Inputs;
 	}
-	// console.log("Linkmutate: "+"neuron1: "+neuron1+" neuron2: "+neuron2);
 	if (containsLink(genome.genes, newLink) ){
 		return;
 	}
@@ -380,7 +373,6 @@ function linkMutate(genome, forceBias){
 			var linkMutation = pool.LinkMutationList[i];
 			if(newLink.into == linkMutation['newLink_into'] && newLink.out == linkMutation['newLink_out']){
 				newLink.innovation = linkMutation['newLink_innovation'];
-				// console.log("\n\n\nLinkmutate: Innovation already exists. "+" Innovation number of newLink = "+newLink.innovation);
 				flag = true;
 				break;
 			}
@@ -388,15 +380,10 @@ function linkMutate(genome, forceBias){
 	}
 	if(!flag){
 		newLink.innovation = newInnovation(pool);
-		// console.log("\n\n\nNew innovation called for LinkMutate: Innovation number of newLink = "+newLink.innovation);
 	}
 
-
 	newLink.weight = Math.random()*4-2;
-	// console.log("LinkMutate: Genes List length before pushing newLink:"+genome.genes.length);
 	genome.genes.push(newLink);
-	// console.log("LinkMutate: Genes List length after pushing newLink:"+genome.genes.length);
-	// // console.log("\n\nNew link created with in: "+newLink.into+" and out: "+newLink.out);
 
 	if(!flag){
 		var linkMutation = {};
@@ -404,7 +391,6 @@ function linkMutate(genome, forceBias){
 		linkMutation['newLink_out'] = newLink.out;
 		linkMutation['newLink_innovation'] = newLink.innovation;
 		pool.LinkMutationList.push(linkMutation);
-		// console.log("\n\nLinkMutations Pushed");
 	}
 }
 
@@ -418,23 +404,16 @@ function nodeMutate(genome){
 
 	var gene = genome.genes[Math.floor(Math.random()*(genome.genes.length))];
 
-	// console.log("\n\nNodeMutate called: Gene list length: "+genome.genes.length);
-	//console.log(gene);
 	if (!gene.enabled ){
-		// console.log("\n\nSelected gene wasn't enabled. So returned.");
-
 		return;
 	}
 
-
 	// Disabling existing gene between two nodes
 	gene.enabled = false;
-
-
 	var gene1 = copyGene(gene);
 	var gene2 = copyGene(gene);
 	var flag = false;
-	
+
 	if(pool.NodeMutationList){
 		for(var i in pool.NodeMutationList){
 			var nodeMutation = pool.NodeMutationList[i];
@@ -442,8 +421,6 @@ function nodeMutate(genome){
 				pool.nextNeuronID = nodeMutation['nextneuronID'];//genome.nextNeuronID = nodeMutation['nextneuronID'];
 				gene1.innovation = nodeMutation['gene1_innovation'];
 				gene2.innovation = nodeMutation['gene2_innovation'];
-				// console.log("\n\n\nNodemutate: Innovation already exists. "+"Innovation of gene 1: "+gene1.innovation
-				// 	+"Innovation of gene 2: "+gene2.innovation+"nextNeuronID: "+pool.nextNeuronID/*genome.nextNeuronID*/);
 				flag = true;
 				break;
 			}
@@ -452,26 +429,22 @@ function nodeMutate(genome){
 	if(!flag){
 		pool.nextNeuronID += 1;//genome.nextNeuronID = genome.nextNeuronID + 1;
 		gene1.innovation = newInnovation(pool);
-		// console.log("\n\n\nNew innovation called for nodemutate: "+gene1.innovation);
 		gene2.innovation = newInnovation(pool);
-		// console.log("\n\n\nNew innovation called for nodemutate second link: "+gene2.innovation);
 	}
-	
-	// Creating a link (gene) between input node and new node with weight 1.0
-	//var gene1 = copyGene(gene);
+
 	gene1.out = pool.nextNeuronID;//genome.nextNeuronID;
 	gene1.weight = 1.0;
 
-	
-	
+
+
 
 	gene1.enabled = true;
 	genome.genes.push(gene1);
 	// Creating a link (gene) between new node and output node with weight = weight of original gene
 	//var gene2 = copyGene(gene);
 	gene2.into = pool.nextNeuronID;//genome.nextNeuronID;
-	
-	
+
+
 	gene2.enabled = true;
 	genome.genes.push(gene2);
 
@@ -483,7 +456,6 @@ function nodeMutate(genome){
 		nodeMutation['gene1_innovation'] = gene1.innovation;
 		nodeMutation['gene2_innovation'] = gene2.innovation;
 		pool.NodeMutationList.push(nodeMutation);
-		// console.log("\n\nNodeMutations Pushed");
 	}
 }
 
@@ -515,7 +487,6 @@ function enableDisableMutate(genome, enable){
 	// if(gene.enabled && !genome.network.neurons[gene.into]) {
 	// 	genome.network.neurons[gene.into] = new Neuron();
 	// }
-	// console.log("\nenableDisableMutate is executed");
 }
 
 function mutate(genome){
@@ -559,7 +530,6 @@ function mutate(genome){
 	p = genome.mutationRates['disable'];
 	if(p >= 1.0 || Math.random() < p)
 		enableDisableMutate(genome, false);
-	// console.log("\nmutate is executed");
 }
 
 
@@ -651,7 +621,6 @@ var generateNetwork = function(genome) {
 
 	for(var i = 0; i < genome.genes.length; i++) {
 		var gene = genome.genes[i];
-		console.log("index..... "+i);
 		if(gene.enabled) {
 
 			// If gene is enabled but there is no output neuron
@@ -667,18 +636,15 @@ var generateNetwork = function(genome) {
 	}
 
 	genome.network = network;
-	console.log("\ngenerateNetwork is executed");
 }
 
 //inputs is list of inputs
 //network is network object
 var evaluateNetwork = function(genome,network,inputs) {
 	inputs.push(1);	//Push the bias
-	console.log("inplnght : "+inputs.length+"network_inputs: "+network.Inputs);
 	if(inputs.length -1 != network.Inputs) {
 
-
-		console.log("\n\n\nIncorrect number of inputs for neural network\n\n\n");
+		console.error("\n\n\nIncorrect number of inputs for neural network\n\n\n");
 
 		for(o = [],i = 0; i < network.Outputs; i++) o.push[0];
 		return o;	//return
@@ -697,7 +663,6 @@ var evaluateNetwork = function(genome,network,inputs) {
 	// var sorted;
 	// try {
  //    sorted = tsort(edges);
- //    console.log(sorted);
 	//   }
 	// catch (e) {
 	//     console.log(e.message);
@@ -734,16 +699,8 @@ var evaluateNetwork = function(genome,network,inputs) {
 	for(var i = network.maxNumNeurons; i < network.maxNumNeurons + network.Outputs; i++) {
 			o.push(network.neurons[i].value)
 		}
-	// console.log("\nevaluateNetwork is executed");
 	return o;
 }
-
-
-// var Config  = require('./config')
-// var Genome = require('./Genome');
-// var Gene = require('./Gene');
-
-
 
 var Species = function(){
 
@@ -769,8 +726,6 @@ function calculateAverageFitness(species){
         }
 
         species.averageFitness = total / species.genomes.length;
-        // console.log("\ncalculateAverageFitness is executed");
-        return species.averageFitness;
 }
 
 
@@ -780,7 +735,6 @@ function totalAverageFitness(pool){
             var species = pool.species[s];
             total = total + species.averageFitness;
         }
-        // console.log("\ntotalAverageFitness is executed");
         return total;
 }
 
@@ -803,7 +757,6 @@ function cullSpecies(cutToOne,pool){
             species.genomes.pop();
         }
     }
-    // console.log("\ncullSpecies is executed");
 }
 
 
@@ -819,7 +772,6 @@ function breedChild(species){
     }
 
     mutate(child);                  //check :
-    // console.log("\nbreedChild is executed");
     return child;
 
 
@@ -849,30 +801,24 @@ function removeStaleSpecies(pool){
         }
     }
 
+    if(survived.length > 1)
     pool.species = survived;
-    // console.log("\nremoveWeakSpecies is executed");
-
-
 }
 
 function removeWeakSpecies(pool){
 
     var survived = [];
-
-
     var sum = totalAverageFitness(pool);
 
     for (var s =0;s<pool.species.length; s++ ){
         var species = pool.species[s];
-        breed = Math.floor(species.averageFitness / sum * Config.Population);
+        var breed = Math.floor((species.averageFitness / sum) * Config.Population);
         if (breed >= 1 ){
             survived.push(species);
         }
     }
-
+    if(survived.length > 1)
     pool.species = survived;
-    // console.log("\nremoveWeakSpecies is executed");
-
 }
 
 function addToSpecies(child,pool){
@@ -888,24 +834,17 @@ function addToSpecies(child,pool){
     }
 
     if (!foundSpecies ){
-
-        // console.log("New species created.");
         var childSpecies = new Species();
-        // console.log(childSpecies.genomes);
 
         childSpecies.genomes.push(child);
         pool.species.push(childSpecies);
     }
-    // console.log("\naddToSpecies is executed");
-
 }
 
 function sameSpecies(genome1, genome2){
     var dd = Config.DeltaDisjoint*disjoint(genome1.genes, genome2.genes);
     var dw = Config.DeltaWeights*weights(genome1.genes, genome2.genes);
-    // console.log("\nsameSpecies is executed");
     return dd + dw < Config.DeltaThreshold;
-    // console.log("sameSpecies");
 }
 
 // var Species = require('./Species');
@@ -942,7 +881,7 @@ var Pool = function(){
 			'shouldStop':shouldStop,
 			'nextNeuronID':nextNeuronID,
 			'NodeMutationList':NodeMutationList,
-			'LinkMutationList':LinkMutationList	
+			'LinkMutationList':LinkMutationList
 		}
 
 };
@@ -951,13 +890,11 @@ function initializePool(){
 	pool = new Pool();
 
 	for (var i =0;i<Config.Population;i++){
-		console.log("initializePool index " + i);
 		var basic = basicGenome();	//Comeback
 		addToSpecies(basic,pool);
 	}
-	// console.log("\ninitializePool is executed");
 	for(var i in pool.species){
-		console.log("Index i :"+i+" No.of genomes "+pool.species[i].genomes.length);
+		console.warn("Index i :"+i+" No.of genomes "+pool.species[i].genomes.length);
 
 	}
 	return pool;
@@ -967,14 +904,13 @@ function initializePool(){
 //innovation is the next available innovation number
 function newInnovation(pool){
 	pool.innovation = pool.innovation + 1;
-	// console.log("\nnewInnovation is executed");
 	return pool.innovation-1;	//innovation - 1 is available
 }
 
 
 function rankGlobally(pool){
 	var global1 = [];
-	for (var s = 1 in pool.species){
+	for (var s in pool.species){
 		var species = pool.species[s];
 		for (var g in species.genomes ){
 			global1.push(species.genomes[g]);
@@ -982,7 +918,6 @@ function rankGlobally(pool){
 	}
 
 	global1.sort(
-
 		function (a,b){
 		return (a.fitness < b.fitness);
 		}
@@ -990,16 +925,15 @@ function rankGlobally(pool){
 
 	for(var g =0 ; g<global1.length ; g++ ){
 		global1[g].globalRank = g;
-	}	
-	// console.log("\nrankGlobally is executed");
+	}
 }
 
-var xor = [[0,0,0],[0,1,1],[1,0,1],[1,1,0]];
+var xor = [[0,0,0],[0,1,1],[1,0,1],[0,2,0],[1,2,1],[2,0,0],[2,1,1],[2,2,0]];
 var xorindex = -1;
 // addfa
 var getInputs = function(){
-	xorindex = (xorindex + 1)%4;
-	console.log("\ngetInputs is executed");
+	xorindex = (xorindex + 1)%xor.length;
+	winston.info("\ngetInputs is executed");
 	return xor[xorindex];
 }
 
@@ -1026,29 +960,34 @@ var Utility = function(){
 	var children = [];
 	for (var s in pool.species){
 		var species = pool.species[s];
-		var breed = Math.floor(species.averageFitness / sum * Config.Population) - 1;
-		for (var i = 1; i <= breed; i++) {
+		var breed = Math.floor((species.averageFitness / sum) * Config.Population) - 1;
+		for (var i = 0; i < breed; i++) {
 			children.push(breedChild(species));
 		}
 	}
 	cullSpecies(true,pool) // Cull all but the top member of each species
 	while (children.length + pool.species.length < Config.Population) {
 
-		var index = Math.floor((Math.random() * pool.species.length));
 
+		var index = Math.floor((Math.random()*pool.species.length));
+    console.error("Pool Species Length: "+pool.species.length+" Index: "+index);
 		var species = pool.species[index];
+    if(!species)
+    {
+      console.log("Species is null");
+      continue;
+    }
 		children.push(breedChild(species));
 	}
+
 	for (var c in children) {
 		var child = children[c];
 		addToSpecies(child,pool);
 	}
 
 	pool.generation += 1;
-	// writeToFile("Backup" + "_" + pool.generation + "_" + /*forms.gettext(saveLoadFile)*/ Config.filename);
-	// console.log("\nnewGeneration is executed");
 }
-// 2
+
 var clearJoypad = function(utility){
 	for(var i in utility.controller) {
 		utility.controller[i] = False;
@@ -1076,18 +1015,18 @@ var evaluateCurrent = function(pool){
 	var species = pool.species[pool.currentSpecies];
 	var genome = species.genomes[pool.currentGenome];
 	var sqerror = 0.0;
-	var misclassifications = 4;
-	for(var index = 0; index < 4; index ++)
+	var misclassifications = xor.length;
+	for(var index = 0; index < xor.length; index ++)
 	{
 	var inputs = getInputs();  // getInputs() must be modified, <Adapter>.getInputs() must be present where Adapter.js is the file responsible for getting inputs
 	var trueOutput = inputs[2];
 	var localInputs = inputs.slice(0,2);
 	var predOutput = evaluateNetwork(genome,genome.network, localInputs);  // inputs is only used here
 	sqerror += Math.pow(predOutput-trueOutput,2);
-	if(Math.abs(predOutput - trueOutput) < 0.5)
+	if(Math.abs(predOutput - trueOutput) < 0.25)
 		misclassifications -= 1;
 	}
-	genome.fitness = 1/(sqerror<0.1?0.1:sqerror);
+	genome.fitness = 2.0 - (misclassifications/xor.length) - (sqerror/xor.length);
 
 	// Utility.controller = controller;
 
@@ -1107,15 +1046,15 @@ var evaluateCurrent = function(pool){
 	// }
 	// //joypad.set(controller);
 
-	console.log(
-		"\n\n Generation: "+pool.generation+
-		"\n\n Species: "+ pool.currentSpecies+
-		"\n\n Genome: "+ pool.currentGenome+
-		"\n\n SquareError: "+sqerror+
-		"\n\n Misclassifications: "+misclassifications
-
+	console.warn(
+		"\n\nGeneration: "+pool.generation+
+		"\nSpecies: "+ pool.currentSpecies+
+		"\nGenome: "+ pool.currentGenome+
+		"\nSquareError: "+sqerror+
+		"\nMisclassifications: "+misclassifications+
+    "\n\n"
 	);
-	// console.log("\nevaluateCurrent is executed");
+
 	return misclassifications;
 }
 
@@ -1139,7 +1078,7 @@ var fitnessAlreadyMeasured = function(pool){
 	var species = pool.species[pool.currentSpecies];
 	var genome = species.genomes[pool.currentGenome];
 
-	return genome.fitness != 0;	
+	return genome.fitness != 0;
 }
 
 // 7
@@ -1151,8 +1090,9 @@ while (!pool.shouldStop ) {
 		mycounter += 1;
 		var species = pool.species[pool.currentSpecies];
 		var genome = species.genomes[pool.currentGenome];
-		console.log("Current Species " + pool.currentSpecies+
-		"current genome : "+pool.currentGenome);
+		console.warn(
+      "Current Species: "+pool.currentSpecies+
+      "\nCurrent genome: "+pool.currentGenome);
 		/*if (forms.ischecked(showNetwork)) {
 			displayGenome(genome);
 		}*/
@@ -1162,9 +1102,8 @@ while (!pool.shouldStop ) {
 		generateNetwork(genome);
 		var misclassifications = evaluateCurrent(pool);
 		// }
-		if(!misclassifications) {
+		if(misclassifications < 1) {
 
-			// console.log(genome);
 			console.log("\n\n\nTHE POOL SHOULD STOP\n\n\n");
 
 			pool.shouldStop = !0;
@@ -1237,14 +1176,14 @@ startUtility(pool);
 // 		writeToFile:null,
 // 		loadFromFile:null,
 
-   
-   
+
+
 //  };
- 
+
 //  datastorage.writeToFile = function(fileName,pool){
 
 //      	var jsonGenomes = {};
-//      	jsonGenomes.generation = pool.generation; 
+//      	jsonGenomes.generation = pool.generation;
 // 	    jsonGenomes.maxFitness = pool.maxFitness;
 //      	jsonGenomes.speciesLength = pool.species.length;
 
@@ -1265,9 +1204,9 @@ startUtility(pool);
 //             for(var l in genome.mutationRates){
 //     			jsongenomes.mutationRates = l + genome.mutationRates[l];
 //     		}
-    
+
 //             jsonGenomes.geneslength = genome.genes.length;
-            
+
 //             for (var a in genome.gene){
 //                 var gene = genome.gene;
 //                 jsonGenomes.into = gene.into + " ";
@@ -1276,7 +1215,7 @@ startUtility(pool);
 //                 jsonGenomes.innovation = gene.innovation + " ";
 //                 if(gene.enabled)
 //                 jsonGenomes.geneenabled = 1 ;
-//                 else 
+//                 else
 //                 jsonGenomes.geneenabled = 0;
 //        }
 //      }
@@ -1300,7 +1239,7 @@ startUtility(pool);
 //  		species.topFitness = jsonGenomes.fitness;
 //  		species.staleness = jsonGenomes.staleness;
 //         species.genome.length = jsonGenomes.genomeLength;
-        
+
 //         for(var c=0; c< jsonGenomes.genomeLength;c++){
 //         	var genome = new genome();
 //         	genome.nextNeuronID = jsonGenomes.nextNeuronID;
@@ -1321,20 +1260,9 @@ startUtility(pool);
 //             }
 
 //         }
-        
+
 //  	}
 
- 	
+
 //  }
 // module.exports = datastorage;
-
-
-    		
-
-
-
-
-
-
-
-
