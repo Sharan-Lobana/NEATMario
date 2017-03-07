@@ -1,4 +1,5 @@
 var http = require("http");
+var sleep = require("sleep");
 // var fs = require("fs");
 // var access = fs.createWriteStream( '../NEATMario/node.access.log', { flags: 'a' })
 //       , error = fs.createWriteStream('../NEATMario/node.error.log', { flags: 'a' });
@@ -14,15 +15,15 @@ var http = require("http");
 // console.log('Server running at http://127.0.0.1:8002/');
 
 
-var winston = require('winston');
-
-winston.log('info', 'Hello distributed log files!');
-winston.info('Hello again distributed logs');
-
-winston.level = 'debug';
-console.warn( 'Now my debug messages are written to console!');
-winston.add(winston.transports.File, { filename: 'node.access.log' });
-winston.remove(winston.transports.Console);
+// var winston = require('winston');
+//
+// winston.log('info', 'Hello distributed log files!');
+// winston.info('Hello again distributed logs');
+//
+// winston.level = 'debug';
+// console.warn( 'Now my debug messages are written to console!');
+// winston.add(winston.transports.File, { filename: 'node.access.log' });
+// winston.remove(winston.transports.Console);
 
 var Config={
 
@@ -337,10 +338,13 @@ function linkMutate(genome, forceBias){
 	var leadsToCycle = false;
 	var neuron1 = randomNeuron(genome.genes, false);
 	var neuron2 = randomNeuron(genome.genes, true);
-
+	console.log("Neuron1 :"+neuron1+", Neuron2: "+neuron2);
+	//sleep.sleep(1);
 	var newLink = new Gene();
 	if (neuron1 <= Config.Inputs && neuron2 <= Config.Inputs){
 		//Both input nodes
+		console.log("Both random neurons are input neurons");
+		sleep.sleep(5);
 		return;
 	}
 	if (neuron2 <= Config.Inputs) {
@@ -350,9 +354,6 @@ function linkMutate(genome, forceBias){
 		neuron2 = temp;
 	}
 
-	if(neuron1 == neuron2)
-		return;
-
 	if(neuron1 && neuron2){
 	newLink.into = neuron1;
 	newLink.out = neuron2;
@@ -360,7 +361,17 @@ function linkMutate(genome, forceBias){
 	if (forceBias) {
 		newLink.into = Config.Inputs;
 	}
+
+	if(newLink.into == newLink.out) {
+		console.log("Two neurons for linkmutate are same.");
+		console.log("\n\n");
+		return;
+	}
+
+
 	if (containsLink(genome.genes, newLink) ){
+		console.log("\n\n");
+		console.log("The link is already contained in genes");
 		return;
 	}
 
@@ -400,8 +411,13 @@ function linkMutate(genome, forceBias){
     sorted = tsort(edges);
 	  }
 	catch(e) {
-	    leadsToCycle = true;
-	  }
+		for(i in genome.genes){
+			console.log(genome.genes[i].into+" "+genome.genes[i].out+"\n");
+		}
+		console.log("LinkMutateReverted==================\n");
+		//sleep.sleep(3);
+	  leadsToCycle = true;
+	}
 
 		//If this leads to cycle then revert the linkMutation
 		if(leadsToCycle) {
@@ -413,6 +429,8 @@ function linkMutate(genome, forceBias){
 			//Pop the lates gene added to genome
 			genome.genes.pop();
 		}
+
+		console.log("\n\n");
 }
 
 // creates a new node in between two connected nodes
@@ -426,6 +444,9 @@ function nodeMutate(genome){
 	var gene = genome.genes[Math.floor(Math.random()*(genome.genes.length))];
 
 	if (!gene.enabled ){
+		console.log("Selected Gene wasn't enabled in nodeMutate");
+		console.log("\n\n");
+		//sleep.sleep(2);
 		return;
 	}
 
@@ -477,6 +498,12 @@ function nodeMutate(genome){
 		nodeMutation['gene2_innovation'] = gene2.innovation;
 		pool.NodeMutationList.push(nodeMutation);
 	}
+
+	for(var i in genome.genes){
+		console.log(genome.genes[i].into+" "+genome.genes[i].out);
+	}
+	console.log("\n\n");
+	//sleep.sleep(3);
 }
 
 
@@ -565,10 +592,10 @@ function tsort(edges) {
 
   // 1. build data structures
   edges.forEach(function(v) {
-    var from = v[0], to = v[1];
-    if (!nodes[from]) nodes[from] = new Node(from);
+    var efrom = v[0], to = v[1];
+    if (!nodes[efrom]) nodes[efrom] = new Node(efrom);
     if (!nodes[to]) nodes[to]     = new Node(to);
-    nodes[from].afters.push(to);
+    nodes[efrom].afters.push(to);
   });
 
   // 2. topological sort
@@ -687,6 +714,11 @@ var evaluateNetwork = function(genome,network,inputs) {
 	  }
 	catch(e) {
 			console.log("\n\nNetwork contained a cycle which was found during eval.");
+			for(i in genome.genes){
+				console.log(genome.genes[i].into+" "+genome.genes[i].out+"\n");
+			}
+			console.log("\n==================\n");
+			// sleep.sleep(10);
 	    console.log(e.message);
 	  }
 
@@ -952,7 +984,7 @@ var xorindex = -1;
 // addfa
 var getInputs = function(){
 	xorindex = (xorindex + 1)%xor.length;
-	winston.info("\ngetInputs is executed");
+	// winston.info("\ngetInputs is executed");
 	return xor[xorindex];
 }
 
@@ -1194,7 +1226,7 @@ startUtility(pool);
 // var config = require('./config');
 // var datastorage = {
 // 		writeToFile:null,
-// 		loadFromFile:null,
+// 		loadefromFile:null,
 
 
 
@@ -1246,7 +1278,7 @@ startUtility(pool);
 // }
 
 
-//  datastorage.loadFromFile = function(fileName){
+//  datastorage.loadefromFile = function(fileName){
 
 //  	var jsonGenomes = JSON.parse(fs.readFileSync(fileName));
 //  	var pool = new Pool();
