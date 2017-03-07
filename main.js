@@ -164,7 +164,6 @@ var Genome = function(){
 	var fitness = 0;
 	var adjustedFitness = 0;
 	var network = {};
-	//var nextNeuronID = 0;
 	var globalRank = 0;
 	var mutationRates = {};
 	mutationRates['connections'] = Config.MutateConnectionsChance;
@@ -180,7 +179,6 @@ var Genome = function(){
 		'fitness':fitness,
 		'adjustedFitness':adjustedFitness,
 		'network':network,
-		//'nextNeuronID':nextNeuronID,
 		'globalRank':globalRank,
 		'mutationRates':mutationRates,
 	}
@@ -205,7 +203,7 @@ function copyGenome(genome){
 
 function basicGenome(){
 	var genome = new Genome();
-	pool.nextNeuronID = Config.Inputs;//genome.nextNeuronID = Config.Inputs;
+	pool.nextNeuronID = Config.Inputs;
 
 	//Populate the genes list of genome
 	//Each input is connected to each output
@@ -257,8 +255,6 @@ function crossover(g1, g2){
 			child.genes.push(copyGene(gene1));
 		}
 	}
-
-	//child.nextNeuronID = Math.max(g1.nextNeuronID,g2.nextNeuronID);
 
 	for (mutation in g1.mutationRates){
 		child.mutationRates[mutation] = g1.mutationRates[mutation];
@@ -338,6 +334,7 @@ function pointMutate(genome){
 //TODO: make sure linkMutate doesn't introduce a cycle
 
 function linkMutate(genome, forceBias){
+	var leadsToCycle = false;
 	var neuron1 = randomNeuron(genome.genes, false);
 	var neuron2 = randomNeuron(genome.genes, true);
 
@@ -392,6 +389,30 @@ function linkMutate(genome, forceBias){
 		linkMutation['newLink_innovation'] = newLink.innovation;
 		pool.LinkMutationList.push(linkMutation);
 	}
+
+	//Check if the addition of given link leads to cycle
+	var edges = [];
+	for(var i = 0; i < genome.genes.length; i++) {
+		edges.push([genome.genes[i].into,genome.genes[i].out]);
+	}
+	var sorted;
+	try {
+    sorted = tsort(edges);
+	  }
+	catch(e) {
+	    leadsToCycle = true;
+	  }
+
+		//If this leads to cycle then revert the linkMutation
+		if(leadsToCycle) {
+			//if newinnovation was called
+			if(!flag) {
+				pool.LinkMutationList.pop();
+				previousInnovation(pool);
+			}
+			//Pop the lates gene added to genome
+			genome.genes.pop();
+		}
 }
 
 // creates a new node in between two connected nodes
@@ -418,7 +439,8 @@ function nodeMutate(genome){
 		for(var i in pool.NodeMutationList){
 			var nodeMutation = pool.NodeMutationList[i];
 			if(gene.into == nodeMutation['gene_into'] && gene.out == nodeMutation['gene_out']){
-				pool.nextNeuronID = nodeMutation['nextneuronID'];//genome.nextNeuronID = nodeMutation['nextneuronID'];
+				gene1.out = nodeMutation['nextneuronID'];
+				gene2.into = nodeMutation['nextneuronID'];
 				gene1.innovation = nodeMutation['gene1_innovation'];
 				gene2.innovation = nodeMutation['gene2_innovation'];
 				flag = true;
@@ -427,22 +449,20 @@ function nodeMutate(genome){
 		}
 	}
 	if(!flag){
-		pool.nextNeuronID += 1;//genome.nextNeuronID = genome.nextNeuronID + 1;
+		pool.nextNeuronID += 1;
+		gene1.out = pool.nextNeuronID;
+		gene2.into = pool.nextNeuronID;
 		gene1.innovation = newInnovation(pool);
 		gene2.innovation = newInnovation(pool);
 	}
 
-	gene1.out = pool.nextNeuronID;//genome.nextNeuronID;
 	gene1.weight = 1.0;
-
-
-
 
 	gene1.enabled = true;
 	genome.genes.push(gene1);
 	// Creating a link (gene) between new node and output node with weight = weight of original gene
 	//var gene2 = copyGene(gene);
-	gene2.into = pool.nextNeuronID;//genome.nextNeuronID;
+	//genome.nextNeuronID;
 
 
 	gene2.enabled = true;
@@ -598,7 +618,7 @@ var Neuron = function() {
 
 var Network = function() {
 	return {
-		neurons:[],
+		neurons:{},
 		Inputs: Config.Inputs,
 		Outputs: Config.Outputs,
 		maxNumNeurons: Config.MaxNodes,
@@ -610,7 +630,7 @@ var generateNetwork = function(genome) {
 
 	// Adding input layer and bias Neuron
 	for(var i = 0; i <= Config.Inputs; i++)
-		network.neurons.push(new Neuron());
+		network.neurons[i] = new Neuron();
 
 	// Adding output layer
 
@@ -651,29 +671,31 @@ var evaluateNetwork = function(genome,network,inputs) {
 	}
 
 	//Initialize the inputs
-	for(var i = 0; i <=network.Inputs; i++) {
+	for(var i = 0; i <= network.Inputs; i++) {
 		network.neurons[i].value = inputs[i];
 	}
 
 
-	// var edges = [];
-	// for(var i = 0; i < genome.genes.length; i++) {
-	// 	edges.push([genome.genes[i].into,genome.genes[i].out]);
-	// }
-	// var sorted;
-	// try {
-  //   sorted = tsort(edges);
-	//   }
-	// catch (e) {
-	//     console.log(e.message);
-	//   }
+	var edges = [];
+	for(var i = 0; i < genome.genes.length; i++) {
+		if(genome.genes[i].enabled)
+		edges.push([genome.genes[i].into,genome.genes[i].out]);
+	}
+	var sorted;
+	try {
+    sorted = tsort(edges);
+	  }
+	catch(e) {
+			console.log("\n\nNetwork contained a cycle which was found during eval.");
+	    console.log(e.message);
+	  }
 
-	genome.genes.sort(geneComparison());
-
-	for(var i in genome.genes) {
-		var sum = 0;
-	  var ind;
-		ind = genome.genes[i].out;
+	// genome.genes.sort(geneComparison());
+	var sum,ind;
+	//Compute the feedforward network
+	for(var i in sorted) {
+		sum = 0;
+		ind = sorted[i];
   	if(ind >= network.Inputs) {
     	var neuron = network.neurons[ind];
   		if(!neuron){
@@ -891,10 +913,6 @@ function initializePool(){
 		var basic = basicGenome();	//Comeback
 		addToSpecies(basic,pool);
 	}
-	for(var i in pool.species){
-		console.warn("Index i :"+i+" No.of genomes "+pool.species[i].genomes.length);
-
-	}
 	return pool;
 }
 
@@ -905,6 +923,9 @@ function newInnovation(pool){
 	return pool.innovation-1;	//innovation - 1 is available
 }
 
+function previousInnovation(pool) {
+	pool.innovation = pool.innovation - 1;
+}
 
 function rankGlobally(pool){
 	var global1 = [];
@@ -926,7 +947,7 @@ function rankGlobally(pool){
 	}
 }
 
-var xor = [[0,0,0],[0,1,1],[1,0,1],[1,1,0],[0,2,0],[1,2,1],[2,0,0],[2,1,1],[2,2,0]];
+var xor = [[0,0,0],[0,1,1],[1,0,1],[1,1,0]];
 var xorindex = -1;
 // addfa
 var getInputs = function(){
@@ -968,7 +989,7 @@ var Utility = function(){
 
 
 		var index = Math.floor((Math.random()*pool.species.length));
-    console.error("Pool Species Length: "+pool.species.length+" Index: "+index);
+    // console.error("Pool Species Length: "+pool.species.length+" Index: "+index);
 		var species = pool.species[index];
     if(!species)
     {
@@ -1021,10 +1042,10 @@ var evaluateCurrent = function(pool){
 	var localInputs = inputs.slice(0,2);
 	var predOutput = evaluateNetwork(genome,genome.network, localInputs);  // inputs is only used here
 	sqerror += Math.pow(predOutput-trueOutput,2);
-	if(Math.abs(predOutput - trueOutput) < 0.25)
+	if(Math.abs(predOutput - trueOutput) < 0.5)
 		misclassifications -= 1;
 	}
-	genome.fitness = 2.0 - (misclassifications/xor.length) - (sqerror/xor.length);
+	genome.fitness = (xor.length/(xor.length+sqerror))*(misclassifications/xor.length);
 
 	// Utility.controller = controller;
 
@@ -1044,6 +1065,7 @@ var evaluateCurrent = function(pool){
 	// }
 	// //joypad.set(controller);
 
+	if(pool.generation%2 == 0 && pool.currentGenome%20 == 0)
 	console.warn(
 		"\n\nGeneration: "+pool.generation+
 		"\nSpecies: "+ pool.currentSpecies+
@@ -1088,9 +1110,9 @@ while (!pool.shouldStop ) {
 		mycounter += 1;
 		var species = pool.species[pool.currentSpecies];
 		var genome = species.genomes[pool.currentGenome];
-		console.warn(
-      "Current Species: "+pool.currentSpecies+
-      "\nCurrent genome: "+pool.currentGenome);
+		// console.warn(
+    //   "Current Species: "+pool.currentSpecies+
+    //   "\nCurrent genome: "+pool.currentGenome);
 		/*if (forms.ischecked(showNetwork)) {
 			displayGenome(genome);
 		}*/
@@ -1100,7 +1122,7 @@ while (!pool.shouldStop ) {
 		generateNetwork(genome);
 		var misclassifications = evaluateCurrent(pool);
 		// }
-		if(misclassifications < 1) {
+		if(misclassifications < 1 || pool.generation > 20) {
 
 			console.log("\n\n\nTHE POOL SHOULD STOP\n\n\n");
 
