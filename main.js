@@ -662,7 +662,7 @@ var evaluateNetwork = function(genome,network,inputs) {
 	// }
 	// var sorted;
 	// try {
- //    sorted = tsort(edges);
+  //   sorted = tsort(edges);
 	//   }
 	// catch (e) {
 	//     console.log(e.message);
@@ -670,27 +670,25 @@ var evaluateNetwork = function(genome,network,inputs) {
 
 	genome.genes.sort(geneComparison());
 
-
-	var sum = 0;
-    var ind;
-
-    for(var i in genome.genes){
-	ind = genome.genes[i].out;
-    if(ind >= network.Inputs) {
-      var neuron = network.neurons[ind];
-      	if(!neuron){
-      		continue;
-      	}
-  		for(var j = 0; j < neuron.incoming.length; j++) {
-  			var incoming = neuron.incoming[j];	//Pick a connection
-  			var other = network.neurons[incoming.into];	//Find other end of the connection
-  			//Multiply other end of the connection to weight of the connection and add to sum
-  			sum = sum + incoming.weight * other.value;
+	for(var i in genome.genes) {
+		var sum = 0;
+	  var ind;
+		ind = genome.genes[i].out;
+  	if(ind >= network.Inputs) {
+    	var neuron = network.neurons[ind];
+  		if(!neuron){
+  			continue;
   		}
+			for(var j = 0; j < neuron.incoming.length; j++) {
+				var incoming = neuron.incoming[j];	//Pick a connection
+				var other = network.neurons[incoming.into];	//Find other end of the connection
+		//Multiply other end of the connection to weight of the connection and add to sum
+				sum = sum + incoming.weight * other.value;
+			}
 
-  		if(neuron.incoming.length > 0) {
-  			network.neurons[ind].value = sigmoid(sum);
-  		}
+			if(neuron.incoming.length > 0) {
+				network.neurons[ind].value = sigmoid(sum);
+			}
     }
 	}
 
@@ -928,7 +926,7 @@ function rankGlobally(pool){
 	}
 }
 
-var xor = [[0,0,0],[0,1,1],[1,0,1],[0,2,0],[1,2,1],[2,0,0],[2,1,1],[2,2,0]];
+var xor = [[0,0,0],[0,1,1],[1,0,1],[1,1,0],[0,2,0],[1,2,1],[2,0,0],[2,1,1],[2,2,0]];
 var xorindex = -1;
 // addfa
 var getInputs = function(){
