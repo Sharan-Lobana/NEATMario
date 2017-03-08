@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<!-- saved from url=(0125)https://dsms0mj1bbhn4.cloudfront.net/assets/lib/xdmStore/remote.html#http%3A%2F%2Fmario5.florian-rappl.de%2F%23menu&1_command -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+    <title></title>
+  </head>
+  <body>
+    <script type="text/javascript">
+      (function () {
+        var hashParts = window.location.hash.replace('#', '').split('&');
+        var origin = decodeURIComponent(hashParts[0]);
+        var id = hashParts[1];
+
+        if(!origin) {
+          window.parent.postMessage(JSON.stringfy({
+            id: id,
+            error: true,
+            message: 'missing origin parameter'
+          }), '*');
+          return;
+        }
+
+        window.addEventListener('message', function (evt) {
+          var command;
+          var resp;
+
+          try {
+            command = JSON.parse(evt.data);
+          } catch(e) {
+            return;
+          }
+
+          if (command.action !== 'storage') {
+            return;
+          }
+
+          resp = {
+            id: command.id
+          };
+
+          try {
+            resp.result = localStorage[command.fnName].apply(localStorage, command.args);
+          } catch (e) {
+            resp.error = true;
+            resp.name = e.name;
+            resp.message = e.message;
+          }
+
+          window.parent.postMessage(JSON.stringify(resp), origin);
+        });
+
+        window.parent.postMessage(JSON.stringify({
+          id: id,
+          result: {
+            xdmReady: true
+          }
+        }), origin);
+
+      }());
+    </script>
+  
+
+</body></html>
