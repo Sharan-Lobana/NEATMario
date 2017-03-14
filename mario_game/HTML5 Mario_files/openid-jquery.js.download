@@ -1,7 +1,7 @@
 /*
 	Simple OpenID Plugin
 	http://code.google.com/p/openid-selector/
-
+	
 	This code is licensed under the New BSD License.
 */
 
@@ -31,7 +31,7 @@ openid = {
 
 	/**
 	 * Class constructor
-	 *
+	 * 
 	 * @return {Void}
 	 */
 	init : function(input_id) {
@@ -79,7 +79,7 @@ openid = {
 
 	/**
 	 * Provider image click
-	 *
+	 * 
 	 * @return {Void}
 	 */
 	signin : function(box_id, onload) {
@@ -96,7 +96,7 @@ openid = {
 			this.useInputBox(provider);
 		} else {
 			$('#openid_input_area').empty();
-
+			
             if (!onload) {
 				$('#openid_form').submit();
 			}
@@ -137,7 +137,7 @@ openid = {
 
 	/**
 	 * Sign-in button click
-	 *
+	 * 
 	 * @return {Boolean}
 	 */
 	submit : function() {
