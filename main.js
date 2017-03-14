@@ -1,11 +1,16 @@
 var http = require("http");
 var sleep = require("sleep");
+var robot = require("robotjs");
+var url = require("url");
 
-// http.createServer(function (request, response) {
-//    response.writeHead(200, {'Content-Type': 'text/plain'});
-//    response.end('Hello World\n');
-// }).listen(8002);
-// console.log('Server running at http://127.0.0.1:8002/');
+http.createServer(function (request, response) {
+	var path = url.parse(request.url).pathname;
+	response.writeHead(200, {'Content-Type': 'text/plain'});
+	response.end('Hello World\n');
+}).listen(8002);
+
+
+console.log('Server running at http://127.0.0.1:8002/');
 
 var Config = {
 //the global variables defined here
@@ -37,6 +42,9 @@ EnableMutationChance :0.2,
 TimeoutConstant :20,
 MaxNodes :1000
 };
+
+var gXOff = 0, gYOff = 0;
+var InputsArray = [];
 
 Config.sigmoid = function(x){
 	return 1/(1+math.exp(-4.9*x))
@@ -328,7 +336,7 @@ function linkMutate(genome, forceBias){
 	var neuron1 = randomNeuron(genome.genes, false);
 	//neuron2 shouldn't be an input neuron
 	var neuron2 = randomNeuron(genome.genes, true);
-	console.log("LinkMutate Called :==: Neuron1: "+neuron1+", Neuron2: "+neuron2);
+	// console.log("LinkMutate Called :==: Neuron1: "+neuron1+", Neuron2: "+neuron2);
 	var newLink = new Gene();
 
 	if(neuron1 && neuron2){
@@ -340,15 +348,15 @@ function linkMutate(genome, forceBias){
 	}
 
 	if(newLink.into == newLink.out) {
-		console.log("Two neurons for linkmutate are same.");
-		console.log("\n\n");
+		// console.log("Two neurons for linkmutate are same.");
+		// console.log("\n\n");
 		return;
 	}
 
 
 	if (containsLink(genome.genes, newLink) ){
-		console.log("\n\n");
-		console.log("The link is already contained in genes");
+		// console.log("\n\n");
+		// console.log("The link is already contained in genes");
 		return;
 	}
 
@@ -384,7 +392,7 @@ function linkMutate(genome, forceBias){
 
 	//If this leads to cycle then revert the linkMutation
 	if(leadsToCycle) {
-		console.log("LinkMuatation led to cycle");
+		// console.log("LinkMuatation led to cycle");
 		//if newinnovation was called
 		if(!flag) {
 			pool.LinkMutationList.pop();
@@ -406,8 +414,8 @@ function nodeMutate(genome){
 	var gene = genome.genes[Math.floor(Math.random()*(genome.genes.length))];
 
 	if (!gene.enabled ){
-		console.log("Selected Gene wasn't enabled in nodeMutate");
-		console.log("\n\n");
+		// console.log("Selected Gene wasn't enabled in nodeMutate");
+		// console.log("\n\n");
 		return;
 	}
 
@@ -459,7 +467,7 @@ function nodeMutate(genome){
 			pool.highestHiddenNeuronID -= 1;
 			pool.NodeMutationList.pop();
 		}
-		console.log("Node mutation led to cycle.");
+		// console.log("Node mutation led to cycle.");
 		gene.enabled = true;
 		genome.genes.pop();
 		genome.genes.pop();
@@ -597,7 +605,7 @@ function tsort(edges) {
 }
 
 var sigmoid = function(val) {
-	return 1/(1+Math.exp(-5*val)) ;
+	return 2/(1+Math.exp(-5*val)) - 1 ;
 }
 
 //Utility comparison function for sorting genes
@@ -948,7 +956,7 @@ function rankGlobally(pool){
 	}
 }
 
-var xor = [[0,0,0],[0,1,1],[1,0,1],[1,1,0]];
+var xor = [[3,2,0],[3,1,0],[1,1,0],[1,2,0],[2,1,1],[2,2,1],[2,0,1]];
 var xorindex = -1;
 // addfa
 var getInputs = function(){
@@ -1046,7 +1054,7 @@ var evaluateCurrent = function(pool){
 	if(Math.abs(predOutput - trueOutput) < 0.5)
 		misclassifications -= 1;
 	}
-	genome.fitness = (xor.length-misclassifications*0.8)/(xor.length+sqerror);
+	genome.fitness = (xor.length-misclassifications*0.8)/(xor.length+(sqerror*misclassifications)/xor.length);
 
 	// Utility.controller = controller;
 
@@ -1066,13 +1074,14 @@ var evaluateCurrent = function(pool){
 	// }
 	// //joypad.set(controller);
 
-	if(pool.generation%2 == 0 && pool.currentGenome%20 == 0)
-	console.warn(
+
+	console.log(
 		"\n\nGeneration: "+pool.generation+
 		"\nSpecies: "+ pool.currentSpecies+
 		"\nGenome: "+ pool.currentGenome+
 		"\nSquareError: "+sqerror+
 		"\nMisclassifications: "+misclassifications+
+		"\nGenes Length: "+pool.species[pool.currentSpecies].genomes[pool.currentGenome].genes.length+
     "\n\n"
 	);
 
@@ -1102,6 +1111,10 @@ var fitnessAlreadyMeasured = function(pool){
 	return genome.fitness != 0;
 }
 
+function findMarioPosition() {
+
+var
+}
 // 7
 var startUtility = function(pool){
 	// DataStorage.writeToFile("temp.pool");
@@ -1123,7 +1136,7 @@ while (!pool.shouldStop ) {
 		generateNetwork(genome);
 		var misclassifications = evaluateCurrent(pool);
 		// }
-		if(misclassifications < 1 || pool.generation > 500) {
+		if(misclassifications < 2 || pool.generation > 500) {
 
 			console.log("")
 			console.log("\n\n\nTHE POOL SHOULD STOP\n\n\n");
@@ -1196,7 +1209,20 @@ while (!pool.shouldStop ) {
 		pool.currentFrame += 1;
 	}
 }
-startUtility(pool);
+
+function InitializeInputArray() {
+	InputsArray = [];
+	for(var i = 0; i < 15; i++) {
+		var row = [];
+		for(var j = 0; j < 15; j++) {
+			row.push(0);
+		}
+		InputsArray.push(row);
+	}
+}
+
+InitializeInputArray();
+// startUtility(pool);
 
 //Datastorage
 
@@ -1295,3 +1321,92 @@ startUtility(pool);
 
 //  }
 // module.exports = datastorage;
+
+// var screenSize = robot.getScreenSize();
+//
+// var globalX = 0;
+// var globalY = 0;
+// var gameXoffset = 0;
+// var gameYoffset = 0;
+//
+// var Scanner = {};
+//
+// // Check if the given position is outside the Screen
+// Scanner.isOutOfBound = function (pos) {
+//   if ( pos[X] < 0 || pos[Y] < 0 ||
+//      pos[X] >= screenSize.width ||
+//      pos[Y] >= screenSize.height) {
+//
+//     return true;
+//   }
+//
+//   return false;
+// }
+//
+// // Limits the x/y values of position to fit the screen
+// Scanner.makeInBounds = function (pos) {
+//
+//   if (pos[X] < 0) {
+//     pos[X] = 0;
+//   }
+//
+//   if (pos[X] >= screenSize.width) {
+//     pos[X] = screenSize.width - 1;
+//   }
+//
+//   if (pos[Y] < 0) {
+//     pos[Y] = 0;
+//   }
+//
+//   if (pos[Y] >= screenSize.height) {
+//     pos[Y] = screenSize.height - 1;
+//   }
+//
+//   return pos;
+// }
+//
+// Scanner.matchColor(color, colorLower, colorUpper) {
+// 	var colorSub;
+// 	for(var i = 0; i < 5; i+=2) {
+// 		colorSub = color.substr(i,2);
+// 		if(colorSub.localeCompare(colorLower.substr(i,2)) == -1 ||
+// 			colorSub.localeCompare(colorUpper.substr(i,2)) == 1) {
+//
+// 				return false;
+// 			}
+// 	}
+//
+// 	return true;
+// }
+//
+// //Pass the color limits in string of hex representation format
+// Scanner.scanUntil = function (start, delta, colorLower, colorUpper, iterLimit) {
+//   var color, colorString, current, iterations = 0;
+//   current = Scanner.makeInBounds([start[X], start[Y]]);
+//
+//   if (delta[X] == 0 && delta[Y] == 0) {
+//     return null;
+//   }
+//
+//   while (!Scanner.isOutOfBound(current)) {
+//     // Check current pixel
+//     color = robot.getPixelColor(current[X], current[Y]);
+// 		colorString = color.toString();
+//     if (Scanner.matchColor(colorString, colorUpper, colorLower)) {
+//       return current;
+//     }
+//
+//     current[X] += delta[X];
+//     current[Y] += delta[Y];
+//     iterations++;
+//
+//     if (iterations > iterLimit) {
+//       return null;
+//     }
+//   }
+//   return null;
+// };
+//
+// function InitializeGlobalOffset() {
+//
+// }
