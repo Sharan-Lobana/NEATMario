@@ -1,4 +1,4 @@
-(function() {
+var mariogame = (function() {
     var p = {};
     (function() {
         var n = !1,
@@ -21,6 +21,11 @@
             return f.prototype = o, f.prototype.constructor = f, f.extend = arguments.callee, f
         }
     })();
+
+    var globalMarioPosition = {x: 0, y: 0};
+    var globalObstacles = [];
+    var screenObstacles = [];
+
     var bt = "Content/audio/",
         g = "Content/",
         b = "<div />",
@@ -128,9 +133,45 @@
             bind: function() {
                 var n = this;
                 $(document).on("keydown", function(t) {
+                   
+                /*//==================================================================================
+                    //Send an ajax request to node server
+                    var xmlhttp = new XMLHttpRequest();
+                    var url = "http://localhost:8001/keydown"
+                    var params = "t="+t;
+                    xmlhttp.open("POST", url, true);
+                    xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+
+                    xmlhttp.onreadystatechange = function() {
+                        //Call a function when the state changes.
+                        if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                            console.log(xmlhttp.responseText);
+                        }
+                    }
+                    xmlhttp.send(params);
+                //==================================================================================*/
+                
                     return n.handler(t, !0)
                 });
                 $(document).on("keyup", function(t) {
+
+                /*//==================================================================================
+                    //Send an ajax request to node server
+                    var xmlhttp = new XMLHttpRequest();
+                    var url = "http://localhost:8001/keyup"
+                    var params = "t="+t;
+                    xmlhttp.open("POST", url, true);
+                    xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+
+                    xmlhttp.onreadystatechange = function() {
+                        //Call a function when the state changes.
+                        if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                            console.log(xmlhttp.responseText);
+                        }
+                    }
+                    xmlhttp.send(params);
+                //==================================================================================*/
+                
                     return n.handler(t, !1)
                 })
             },
@@ -138,6 +179,11 @@
                 $(document).off("keydown"), $(document).off("keyup")
             },
             handler: function(n, t) {
+                for(var i = Math.floor(globalMarioPosition["x"] / 32) - 7, count = 0; i <= Math.floor(globalMarioPosition["x"] / 32) + 7; i++, count++){
+                        if(i >= 0){
+                            screenObstacles[count] = globalObstacles[0][i];
+                        }
+                }
                 switch (n.keyCode) {
                     case 57392:
                     case 17:
@@ -161,6 +207,7 @@
                 }
                 return n.preventDefault(), !1
             }
+
         }),
         pi = ui.extend({
             init: function() {
@@ -307,6 +354,7 @@
                 this.x = n, this.y = t
             },
             getPosition: function() {
+                //console.log("\nrt getPosition: x = "+this.x+" y = "+this.y);   //Not even called once
                 return {
                     x: this.x,
                     y: this.y
@@ -329,6 +377,7 @@
                 }
             },
             setupFrames: function(n, t, r, u) {
+                //console.log("\nrt setupFrames called");
                 if (u) {
                     if (this.frameID === u) return !0;
                     this.frameID = u
@@ -339,11 +388,13 @@
                 this.frameID = undefined, this.frames = 0, this.currentFrame = 0, this.frameTick = 0
             },
             playFrame: function() {
+                //console.log("\nrt playFrame called");
                 if (this.frameTick && this.view) {
                     this.frameCount++;
                     if (this.frameCount >= this.frameTick) {
                         this.frameCount = 0, this.currentFrame === this.frames && (this.currentFrame = 0);
                         var n = this.view;
+                        //console.log("\nrt playFrame: inner if condition is satisfied");
                         n.css("background-position", "-" + (this.image.x + this.width * ((this.rewindFrames ? this.frames - 1 : 0) - this.currentFrame)) + "px -" + this.image.y + "px"), this.currentFrame++
                     }
                 }
@@ -420,7 +471,8 @@
                 var e, o, r, s, u, i, f, t;
                 for (this.active && (this.loop && this.pause(), this.reset()), this.setPosition(0, 0), this.setSize(n.width * 32, n.height * 32), this.setImage(n.background), this.raw = n, this.id = n.id, this.active = !0, e = n.data, n.data.splice(n.width), r = 0; r < n.width; r++) {
                     for (o = [], i = 0; i < n.height; i++) o.push("");
-                    this.obstacles.push(o)
+                    this.obstacles.push(o);
+                    //globalObstacles.push(o);
                 }
                 for (r = 0, s = e.length; r < s; r++)
                     for (u = e[r], i = 0, f = u.length; i < f; i++) t = u[i], /^fig_/.test(t) && (t = t.substr(4)), /_\dx\d$/.test(t) && (t = t.substr(0, t.length - 4)), p[t] && new p[t](r * 32, (f - i - 1) * 32, this)
@@ -455,6 +507,7 @@
                     this.deadCycles--, this.invokeDeadCallback();
                     return
                 }
+                //console.log("\nht tick: this.figures.length = "+this.figures.length);
                 for (var t = 0, r = 0, n, i, t = this.figures.length; t--;) {
                     n = this.figures[t];
                     if (n.dead)
@@ -471,9 +524,11 @@
                     n.dead || (n.move(), n.playFrame())
                 }
                 for (t = this.items.length; t--;) this.items[t].playFrame();
+                //console.log("\nht tick called");   //Called continuously
                 this.coinGauge.playFrame(), this.liveGauge.playFrame()
             },
             start: function() {
+                //console.log("\nht start called");   //Called once at the start of the level
                 var n = this;
                 n.bindInput(), n.loop = setInterval(function() {
                     n.tick.apply(n)
@@ -550,8 +605,9 @@
                 if (n < 0 || t >= this.level.obstacles.length) return !0;
                 if (r >= this.level.getGridHeight()) return !1;
                 for (s = n; s <= t; s++)
-                    for (o = r; o >= i; o--) {
+                      for (o = r; o >= i; o--) {
                         e = this.level.obstacles[s][o];
+                        //console.log("st collides: e = "+e);
                         if (e) {
                             e instanceof it && h && (f === u.bottom || e.blocking === u.none) && e.activate(this);
                             if ((e.blocking & f) === f) return !0
@@ -559,6 +615,12 @@
                     }
                 return !1
             },
+            //
+            /*setglobalObstacles: function(){
+                //globalObstacles = this.level.obstacles;
+                //console.log(this.level.obstacles);
+            },*/
+            //
             move: function() {
                 var c = this.vx,
                     s = this.vy - i.gravity,
@@ -576,21 +638,95 @@
                     b = !1,
                     n = Math.floor((v + 16 + c) / 32),
                     o;
+
+                    var enemy, flag = 0;
+                    //console.log("\nst move is called");
+                    //this.setglobalObstacles();
+                    
+                    /*if(Math.floor(this.x/32) >= Math.floor((globalMarioPosition["x"] - 300)/32) && Math.floor(this.x/32) <= Math.ceil((globalMarioPosition["x"] + 600)/32) ){
+                        flag = 1;
+                        var xindex;
+                        if(Math.floor((globalMarioPosition["x"] - 300)/32) < 0)
+                            xindex = Math.floor(this.x/32);
+                        else
+                            xindex = Math.floor(this.x/32) - Math.floor((globalMarioPosition["x"] - 300)/32);
+                        //console.log(xindex);
+                        enemy = screenObstacles[xindex][Math.floor(this.level.getGridHeight() - 1 - this.y / 32)];
+                        console.log(enemy);
+                        screenObstacles[xindex][Math.floor(this.level.getGridHeight() - 1 - this.y / 32)] = "";
+                    }*/
+
+                    /*if (globalObstacles != undefined){
+                        var enemy = globalObstacles[0][Math.floor(this.x / 32)][Math.floor(this.level.getGridHeight() - 1 - this.y / 32)];
+                        globalObstacles[0][Math.floor(this.x / 32)][Math.floor(this.level.getGridHeight() - 1 - this.y / 32)] = "";
+                    }*/
                 for (t > 0 ? (f = n - a, n = a, e = u.left) : t < 0 && (f = l - n, n = l, e = u.right), v += c, o = 0; o < f; o++) {
+
+               /* // ================================================================================
+                 
+                    //Send an ajax request to node server
+                    var xmlhttp = new XMLHttpRequest();
+                    var url = "http://localhost:8001/collides"
+                    var params = "row="+(n+t)+"&columnbottom="+w+"&columntop="+p;
+                    xmlhttp.open("POST", url, true);
+                    xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+
+                    xmlhttp.onreadystatechange = function() {
+                        //Call a function when the state changes.
+                        if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                            console.log(xmlhttp.responseText);
+                        }
+                    }
+                    xmlhttp.send(params);
+
+                // ================================================================================*/
+
                     if (this.collides(n + t, n + t, w, p, e)) {
                         c = 0, v = n * 32 + 15 * t;
+                        //console.log("\nst move: Common Row = "+(n+t)+" Column Bottom = "+w+" Column Top = "+p);
                         break
                     }
                     n += t, l += t, a += t
                 }
                 for (r > 0 ? (n = Math.ceil(this.level.getGridHeight() - y - (h + 31 + s) / 32), f = w - n, n = w, e = u.bottom) : r < 0 ? (n = Math.ceil(this.level.getGridHeight() - 1 - (h + s) / 32), f = n - p, n = p, e = u.top) : f = 0, h += s, o = 0; o < f; o++) {
+
+                /*// ================================================================================
+                 
+                    //Send an ajax request to node server
+                    var xmlhttp = new XMLHttpRequest();
+                    var url = "http://localhost:8001/collides"
+                    var params = "column="+(n-r)+"&rowleft="+l+"&rowright="+a;
+                    xmlhttp.open("POST", url, true);
+                    xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+
+                    xmlhttp.onreadystatechange = function() {
+                        //Call a function when the state changes.
+                        if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                            console.log(xmlhttp.responseText);
+                        }
+                    }
+                    xmlhttp.send(params);
+
+                // ================================================================================*/
                     if (this.collides(l, a, n - r, n - r, e)) {
                         b = r < 0, s = 0, h = this.level.height - (n + 1) * 32 - (r > 0 ? (y - 1) * 32 : 0);
+                        //console.log("\nst move: Common Column = "+(n-r)+" Row Left = "+l+" Row Right = "+a);
                         break
                     }
                     n -= r
                 }
-                this.onground = b, this.setVelocity(c, s), this.setPosition(v, h)
+                this.onground = b, this.setVelocity(c, s), this.setPosition(v, h);
+                 /*if(flag == 1){
+                        var xindex;
+                        if(Math.floor((globalMarioPosition["x"] - 300)/32) < 0)
+                            xindex = Math.floor(v / 32);
+                        else
+                            xindex = Math.floor(v / 32) - Math.floor((globalMarioPosition["x"] - 300)/32);
+                        screenObstacles[xindex][Math.floor(this.level.getGridHeight() - 1 - h / 32)] = enemy;
+                    }*/
+                
+                //console.log("st move: this.onground=b = "+b+ " setVelocity-- vx = "+ c +", vy = "+s+" setPosition-- x = "+v+", y = "+h);
+                //console.log("st move: setPosition-- x = "+v+", y = "+h);
             },
             death: function() {
                 return !1
@@ -604,7 +740,9 @@
                 this.blocking = i, this.view = $(b).addClass(kt).appendTo(r.world), this.level = r, this._super(n, t), this.setSize(32, 32), this.addToGrid(r)
             },
             addToGrid: function(n) {
-                n.obstacles[this.x / 32][this.level.getGridHeight() - 1 - this.y / 32] = this
+                n.obstacles[this.x / 32][this.level.getGridHeight() - 1 - this.y / 32] = this;
+                //console.log(" ct addToGrid: obstacles = "+n.obstacles);
+                //globalObstacles[this.x / 32][this.level.getGridHeight() - 1 - this.y / 32] = n.obstacles[this.x / 32][this.level.getGridHeight() - 1 - this.y / 32];
             },
             setImage: function(n, t, i) {
                 this.view.css({
@@ -862,6 +1000,7 @@
                 for (this.isBouncing = !0, t = this.level.figures.length; t--;) n = this.level.figures[t], n.y !== this.y + 32 || n.x < this.x - 16 || n.x > this.x + 16 || (n instanceof at ? n.setVelocity(n.vx, i.bounce) : n.die())
             },
             playFrame: function() {
+                //console.log("\nit playFrame called");
                 this.isBouncing && (this.view.css({
                     bottom: (this.bounceDir > 0 ? "+" : "-") + "=" + this.bounceStep + "px"
                 }), this.bounceCount += this.bounceDir, this.bounceCount === this.bounceFrames ? this.bounceDir = -1 : this.bounceCount === 0 && (this.bounceDir = 1, this.isBouncing = !1)), this._super()
@@ -915,6 +1054,7 @@
             },
             playFrame: function() {
                 for (var n = this.actors.length; n--;) this.actors[n].act() && (this.actors[n].view.remove(), this.actors.splice(n, 1));
+                //console.log("\nhi playFrame called");
                 this._super()
             }
         }, "coinbox"),
@@ -999,6 +1139,7 @@
                 this._super(n, t, i)
             }
         }),
+        // Corresponds to mario
         v = ut.extend({
             init: function(t, r, u) {
                 this.standSprites = [
@@ -1080,10 +1221,22 @@
             setState: function(n) {
                 n !== this.state && (this.setMarioState(a.normal), n === h.small ? this.setSize(32, 46) : this.setSize(32, 62), this._super(n))
             },
-            setPosition: function(n, t) {
+            setPosition: function(n, t) {   //Gives position of mario
+                //console.log("t setPosition: n = "+n+" t = "+t);
                 this._super(n, t);
                 var i = this.level.width - 640,
                     r = this.x <= 210 ? 0 : this.x >= this.level.width - 230 ? i : i / (this.level.width - 440) * (this.x - 210);
+                //
+                globalMarioPosition.x = n;
+                globalMarioPosition.y = t;
+                /*for(var i = Math.floor((globalMarioPosition["x"] - 300)/32); i <= Math.ceil((globalMarioPosition["x"] + 600)/32); i++){
+                    for(var j = 0; j<=14; j++){
+                        if(globalObstacles[0][i][j]){
+                            screenObstacles[i][j] = globalObstacles[0][i][j];
+                        }
+                    }
+                }*/
+                //
                 this.level.setParallax(r), this.onground && this.x >= this.level.width - 128 && this.victory()
             },
             input: function(n) {
@@ -1135,12 +1288,14 @@
                 this.level.playSound("jump"), this.vy = i.jumping_v
             },
             move: function() {
+                //console.log(this.level.getInput());
                 this.input(this.level.getInput()), this._super()
             },
             addCoin: function() {
                 this.setCoins(this.coins + 1)
             },
             playFrame: function() {
+                //console.log("\nv playFrame called");
                 this.blinking && (this.blinking % i.blinkfactor == 0 && this.view.toggle(), this.blinking--), this.cooldown && this.cooldown--, this.deadly && this.deadly--, this.invulnerable && this.invulnerable--, this._super()
             },
             setCoins: function(n) {
@@ -1158,9 +1313,11 @@
                 }), this.deathCount += this.deathDir, this.deathCount === this.deathFrames ? this.deathDir = -1 : this.deathCount === 0 && (this.deathEndWait = Math.floor(1800 / i.interval)), !0)
             },
             die: function() {
+                //console.log("v die is called");
                 this.setMarioState(a.normal), this.deathStepDown = Math.ceil(240 / this.deathFrames), this.setSize(32, 48), this.setupFrames(9, 2, !0), this.setImage(n.sprites, 416, 0), this.level.playMusic("die"), this._super()
             },
             hurt: function(n) {
+                //console.log("v hurt is called");
                 if (this.deadly) n.die();
                 else {
                     if (this.invulnerable) return;
@@ -1217,6 +1374,7 @@
                 this.speed = n, this.setVelocity(-n, 0)
             },
             hurt: function() {
+                //console.log("tt hurt is called");
                 this.die()
             },
             hit: function(n) {
@@ -1362,11 +1520,13 @@
             },
             move: function() {
                 var n = this.level.mario;
+                //console.log("\naf move: n = "+n);
                 if (n && Math.abs(this.x - n.x) <= 800) {
                     var t = Math.sign(n.x - this.x),
                         u = Math.sign(n.y - this.y) * .5,
                         i = t ? t + 2 : this.direction,
                         r = n.direction === i ? ft.awake : ft.sleep;
+                    //console.log("\naf move: posx = "+(this.x+t)+" posy = "+(this.y+u));
                     this.setMode(r, i), r && this.setPosition(this.x + t, this.y + u)
                 } else this.setMode(ft.sleep, this.direction)
             },
@@ -4559,6 +4719,7 @@
                 n = this.raw.width - this.obstacles.length;
                 if (n > 0)
                     for (t = n; t--;) this.obstacles.push(new Array(15));
+                //console.log("\nbi adjustRaw called"); //Not called even once
                 return this.raw
             },
             save: function() {
@@ -4589,6 +4750,7 @@
                 }
             },
             setItem: function(n, t, i, r) {
+                //console.log("\nbi setItem called");   //Not even called once
                 this.setItems([n], [t], [i], r)
             },
             setItems: function(n, t, i, r) {
@@ -4616,6 +4778,7 @@
                         if (f < 0 || f >= this.raw.width) continue;
                         for (e = Math.ceil(i - s); e < Math.ceil(i + s); e++) c.push(n), l.push(f), h.push(e), this.removeView(f, e), new p[n](32 * f, 448 - 32 * e, this)
                     } else c.push(n), l.push(t), h.push(i);
+                //console.log("\nbi addItem called");   //Not even called once
                 this.setItems(c, l, h, r)
             },
             removeItem: function(n, t, i) {
@@ -4689,7 +4852,8 @@
                 this.view = $(b).addClass(ci).appendTo(i.world), this._super(n, t), this.level = i
             },
             addToGrid: function(n, t) {
-                this.level.obstacles[n / 32][14 - t / 32] = this
+                this.level.obstacles[n / 32][14 - t / 32] = this;
+                //console.log("gt addToGrid: level.obstacles "+this.level.obstacles);
             },
             onDrop: function() {},
             setImage: function(n, t, i) {
@@ -5085,6 +5249,7 @@
                 n < 1 && y.next()
             },
             transition: function() {
+                //console.log("\ny transition called");   //Not even called once
                 var n = 2e3;
                 $(".dia-next").animate({
                     opacity: 1
@@ -5095,6 +5260,7 @@
                 })
             },
             next: function() {
+                //console.log("\ny next called");   //Called once at the beginning of the level
                 var n = $(".dia").index(".dia-next");
                 $(".dia-current").removeClass("dia-current").css("opacity", 0), $(".dia-next").removeClass("dia-next").addClass("dia-current").css("opacity", 1), $(".dia").eq(y.getRandom(n)).addClass("dia-next")
             }
@@ -5134,9 +5300,11 @@
                     return t.performAjax(this.href), n.preventDefault(), !0
                 }), $("#ajax div[data-level-load]").click(function() {
                     var i = $(this).attr("data-level-load") * 1;
+                    //console.log("\nt ajaxHandlers: data-level-details");
                     t.load(i)
                 }), $("#ajax div[data-level-details]").click(function() {
                     var i = $(this).attr("data-level-details") * 1;
+                    //console.log("\nt ajaxHandlers: data-level-details");
                     t.layer("dynamic"), $("#dynamic-content").empty().load("/Level/Details/" + i)
                 }), $("#ajax div[data-level-rate]").click(function() {
                     var i = $(this).attr("data-level-rate") * 1;
@@ -5157,6 +5325,7 @@
                 $(".layer").hide().filter("#" + n).show()
             },
             section: function(n, i) {
+                //console.log("\nt section called");
                 if (t.current === n) return;
                 t.current = n, location.hash !== "#" + n && (location.hash = n), (arguments.length < 2 || !i) && d && d.music(n), $(".layer").hide(), n === "menu" ? y.start() : y.stop(), $(".section:visible").hide("slide", {
                     direction: "left"
@@ -5165,7 +5334,13 @@
                 }, 400), $("#bottomnav").children(":visible").hide(400), $("#" + n + "_buttons").show(400).length > 0 ? $("#bottompanel").show() : $("#bottompanel").hide(), n === "game" ? f.start() : f.pause()
             },
             level: function(n, i) {
-                t.section("levelloading", !0), ot.custom = !1, ot.editor = !1, f.load(et[n]), i && f.importSaveGame(i), f.setDeadCallback(t.end), f.setNextCallback(t.next), f.setSameCallback(t.same), t.showGame()
+                t.section("levelloading", !0), ot.custom = !1, ot.editor = !1, f.load(et[n]), globalObstacles.push(et[n].data); /*console.log(et[n].data),*/
+                 for(var i = Math.floor(globalMarioPosition["x"] / 32) - 7, count = 0; i <= Math.floor(globalMarioPosition["x"] / 32) + 7; i++, count++){
+                        if(i >= 0){
+                            screenObstacles[count] = globalObstacles[0][i];
+                        }
+                } 
+                i && f.importSaveGame(i), f.setDeadCallback(t.end), f.setNextCallback(t.next), f.setSameCallback(t.same), t.showGame()
             },
             custom: function(n, i) {
                 t.section("levelloading", !0), ot.custom = !0, ot.editor = i, f.load(n), i ? (f.importSaveGame({
@@ -5208,6 +5383,7 @@
                 t.section("menu")
             },
             showGame: function() {
+                //console.log("\nt showGame called");
                 t.section("game")
             },
             buttons: function() {
@@ -5350,4 +5526,29 @@
     }, $(document).ready(function() {
         t.setup(), t.editor(), t.game()
     })
+
+    var screenObstaclesPass = setInterval(function(){
+        //Send an ajax request to node server
+                    var xmlhttp = new XMLHttpRequest();
+                    var url = "http://localhost:8001/screenObstacles";
+                    var params = screenObstacles;
+                    xmlhttp.open("POST", url, true);
+                    xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+
+                    xmlhttp.onreadystatechange = function() {
+                        //Call a function when the state changes.
+                        if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                            //console.log(xmlhttp.responseText);
+                        }
+                    }
+                    xmlhttp.send(params);
+    },100);
+
+    return {
+        globalMarioPosition: globalMarioPosition,
+        globalObstacles: globalObstacles,
+        screenObstacles: screenObstacles,
+        screenObstaclesPass: screenObstaclesPass
+    };
+
 })()
