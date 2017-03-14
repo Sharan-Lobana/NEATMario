@@ -179,8 +179,8 @@ var mariogame = (function() {
                 $(document).off("keydown"), $(document).off("keyup")
             },
             handler: function(n, t) {
-                for(var i = Math.floor((globalMarioPosition["x"] - 300)/32), count = 0; i <= Math.ceil((globalMarioPosition["x"] + 600)/32); i++, count++){
-                        if(globalObstacles != undefined){
+                for(var i = Math.floor(globalMarioPosition["x"] / 32) - 7, count = 0; i <= Math.floor(globalMarioPosition["x"] / 32) + 7; i++, count++){
+                        if(i >= 0){
                             screenObstacles[count] = globalObstacles[0][i];
                         }
                 }
@@ -507,6 +507,7 @@ var mariogame = (function() {
                     this.deadCycles--, this.invokeDeadCallback();
                     return
                 }
+                //console.log("\nht tick: this.figures.length = "+this.figures.length);
                 for (var t = 0, r = 0, n, i, t = this.figures.length; t--;) {
                     n = this.figures[t];
                     if (n.dead)
@@ -638,9 +639,27 @@ var mariogame = (function() {
                     n = Math.floor((v + 16 + c) / 32),
                     o;
 
+                    var enemy, flag = 0;
                     //console.log("\nst move is called");
                     //this.setglobalObstacles();
+                    
+                    /*if(Math.floor(this.x/32) >= Math.floor((globalMarioPosition["x"] - 300)/32) && Math.floor(this.x/32) <= Math.ceil((globalMarioPosition["x"] + 600)/32) ){
+                        flag = 1;
+                        var xindex;
+                        if(Math.floor((globalMarioPosition["x"] - 300)/32) < 0)
+                            xindex = Math.floor(this.x/32);
+                        else
+                            xindex = Math.floor(this.x/32) - Math.floor((globalMarioPosition["x"] - 300)/32);
+                        //console.log(xindex);
+                        enemy = screenObstacles[xindex][Math.floor(this.level.getGridHeight() - 1 - this.y / 32)];
+                        console.log(enemy);
+                        screenObstacles[xindex][Math.floor(this.level.getGridHeight() - 1 - this.y / 32)] = "";
+                    }*/
 
+                    /*if (globalObstacles != undefined){
+                        var enemy = globalObstacles[0][Math.floor(this.x / 32)][Math.floor(this.level.getGridHeight() - 1 - this.y / 32)];
+                        globalObstacles[0][Math.floor(this.x / 32)][Math.floor(this.level.getGridHeight() - 1 - this.y / 32)] = "";
+                    }*/
                 for (t > 0 ? (f = n - a, n = a, e = u.left) : t < 0 && (f = l - n, n = l, e = u.right), v += c, o = 0; o < f; o++) {
 
                /* // ================================================================================
@@ -697,6 +716,15 @@ var mariogame = (function() {
                     n -= r
                 }
                 this.onground = b, this.setVelocity(c, s), this.setPosition(v, h);
+                 /*if(flag == 1){
+                        var xindex;
+                        if(Math.floor((globalMarioPosition["x"] - 300)/32) < 0)
+                            xindex = Math.floor(v / 32);
+                        else
+                            xindex = Math.floor(v / 32) - Math.floor((globalMarioPosition["x"] - 300)/32);
+                        screenObstacles[xindex][Math.floor(this.level.getGridHeight() - 1 - h / 32)] = enemy;
+                    }*/
+                
                 //console.log("st move: this.onground=b = "+b+ " setVelocity-- vx = "+ c +", vy = "+s+" setPosition-- x = "+v+", y = "+h);
                 //console.log("st move: setPosition-- x = "+v+", y = "+h);
             },
@@ -5306,7 +5334,13 @@ var mariogame = (function() {
                 }, 400), $("#bottomnav").children(":visible").hide(400), $("#" + n + "_buttons").show(400).length > 0 ? $("#bottompanel").show() : $("#bottompanel").hide(), n === "game" ? f.start() : f.pause()
             },
             level: function(n, i) {
-                t.section("levelloading", !0), ot.custom = !1, ot.editor = !1, f.load(et[n]), globalObstacles.push(et[n].data), /*console.log(et[n].data),*/ i && f.importSaveGame(i), f.setDeadCallback(t.end), f.setNextCallback(t.next), f.setSameCallback(t.same), t.showGame()
+                t.section("levelloading", !0), ot.custom = !1, ot.editor = !1, f.load(et[n]), globalObstacles.push(et[n].data); /*console.log(et[n].data),*/
+                 for(var i = Math.floor(globalMarioPosition["x"] / 32) - 7, count = 0; i <= Math.floor(globalMarioPosition["x"] / 32) + 7; i++, count++){
+                        if(i >= 0){
+                            screenObstacles[count] = globalObstacles[0][i];
+                        }
+                } 
+                i && f.importSaveGame(i), f.setDeadCallback(t.end), f.setNextCallback(t.next), f.setSameCallback(t.same), t.showGame()
             },
             custom: function(n, i) {
                 t.section("levelloading", !0), ot.custom = !0, ot.editor = i, f.load(n), i ? (f.importSaveGame({
@@ -5493,10 +5527,28 @@ var mariogame = (function() {
         t.setup(), t.editor(), t.game()
     })
 
+    var screenObstaclesPass = setInterval(function(){
+        //Send an ajax request to node server
+                    var xmlhttp = new XMLHttpRequest();
+                    var url = "http://localhost:8001/screenObstacles";
+                    var params = screenObstacles;
+                    xmlhttp.open("POST", url, true);
+                    xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+
+                    xmlhttp.onreadystatechange = function() {
+                        //Call a function when the state changes.
+                        if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                            //console.log(xmlhttp.responseText);
+                        }
+                    }
+                    xmlhttp.send(params);
+    },100);
+
     return {
         globalMarioPosition: globalMarioPosition,
         globalObstacles: globalObstacles,
-        screenObstacles: screenObstacles
+        screenObstacles: screenObstacles,
+        screenObstaclesPass: screenObstaclesPass
     };
 
 })()
